@@ -1,0 +1,20 @@
+{
+    "id": "ac6d1196-3488-49b0-b670-8361bca1d8d6",
+    "name": "BSL",
+    "address": "г Москва, ул Складочная, д 3 стр 5",
+    "phone": "79123456789",
+    "logo_id": "00000000-0000-0000-0000-000000000000",
+    "is_external": false,
+    "integration_key": null,
+    "integration_source": "saas",
+    "auto_assign_enabled": true,
+    "eta_enabled": false,
+    "external_license": false,
+    "check_courier_slot_enabled": true,
+    "partial_shipment_enabled": false,
+    "invoice_customer_ids": [],
+    "contact_url": null,
+    "firms": null,
+    "created_at": "2023-03-16T11:56:30.322204Z",
+    "updated_at": "2024-11-25T19:46:58.020004Z"
+}

@@ -1,0 +1,3 @@
+[31m[1mERROR   [0m tests/e2e/test_delivery_couier_flow.py::TestDeliveryCourierFlow::test_multiple_deliveries_routing_flow (setup):assertions.py:73 Expected status 'closed', but got 'performing' for route e6d40f50-785f-4fe4-af29-05fcc9df3e8a.
+[31m[1mERROR   [0m tests/e2e/test_delivery_couier_flow.py::TestDeliveryCourierFlow::test_multiple_deliveries_routing_flow (setup):assertions.py:73 Expected status 'closed', but got 'performing' for route e6d40f50-785f-4fe4-af29-05fcc9df3e8a.
+[31m[1mERROR   [0m tests/e2e/test_delivery_couier_flow.py::TestDeliveryCourierFlow::test_multiple_deliveries_routing_flow (setup):assertions.py:73 Expected status 'closed', but got 'performing' for route e6d40f50-785f-4fe4-af29-05fcc9df3e8a.

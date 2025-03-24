@@ -1,0 +1,1 @@
+[31m[1mERROR   [0m tests/test_company/test_get_company_by_id.py::TestGetCompanyById::test_get_company_by_invalid_id[] (setup):assertions.py:13 Expected 400 status code but got 301 status code instead

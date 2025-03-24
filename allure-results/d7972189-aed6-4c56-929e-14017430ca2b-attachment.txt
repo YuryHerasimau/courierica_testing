@@ -1,0 +1,1 @@
+[31m[1mERROR   [0m tests/test_company/test_get_companies.py::TestGetCompanies::test_pagination[0-10-HTTPStatus.BAD_REQUEST] (setup):assertions.py:13 Expected 400 status code but got 500 status code instead

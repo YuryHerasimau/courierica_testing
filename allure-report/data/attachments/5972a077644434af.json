@@ -1,0 +1,69 @@
+{
+    "routes": [
+        {
+            "id": "e6d40f50-785f-4fe4-af29-05fcc9df3e8a",
+            "courier": {
+                "id": "f0410cd8-2b1e-4b0b-9f0b-5beef7d1a993",
+                "name": "Курьер",
+                "last_name": "Demo"
+            },
+            "number": "2050",
+            "distance_plan": 169229.3,
+            "distance_fact": null,
+            "deliveries_count": 15,
+            "status": "performing",
+            "status_updated_at": "2025-03-24T18:40:28.708269Z",
+            "comment": null
+        },
+        {
+            "id": "fabc98d1-8e3e-4680-83ba-5a6b8ec65a46",
+            "courier": {
+                "id": "f0410cd8-2b1e-4b0b-9f0b-5beef7d1a993",
+                "name": "Курьер",
+                "last_name": "Demo"
+            },
+            "number": "2049",
+            "distance_plan": 66703.7,
+            "distance_fact": 10849.9,
+            "deliveries_count": 4,
+            "status": "closed",
+            "status_updated_at": "2025-03-24T18:37:34.293413Z",
+            "comment": null
+        },
+        {
+            "id": "c32eaca6-10f1-4aa3-ac98-c4c8a3f48213",
+            "courier": {
+                "id": "f0410cd8-2b1e-4b0b-9f0b-5beef7d1a993",
+                "name": "Курьер",
+                "last_name": "Demo"
+            },
+            "number": "2048",
+            "distance_plan": 5728.7,
+            "distance_fact": 5724.2,
+            "deliveries_count": 3,
+            "status": "closed",
+            "status_updated_at": "2025-03-24T15:36:00.785492Z",
+            "comment": null
+        },
+        {
+            "id": "3e328697-3dae-48be-83cb-f24275bd932a",
+            "courier": {
+                "id": "f0410cd8-2b1e-4b0b-9f0b-5beef7d1a993",
+                "name": "Курьер",
+                "last_name": "Demo"
+            },
+            "number": "2046",
+            "distance_plan": 59296.4,
+            "distance_fact": 16153.4,
+            "deliveries_count": 2,
+            "status": "closed",
+            "status_updated_at": "2025-03-24T15:16:26.013818Z",
+            "comment": null
+        }
+    ],
+    "pagination": {
+        "page": 1,
+        "per_page": 10,
+        "total": 4
+    }
+}
