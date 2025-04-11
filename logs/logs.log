@@ -7,3 +7,33 @@ ERROR | 2025-03-24 22:38:49 | Expected status 'closed', but got 'performing' for
 ERROR | 2025-03-24 22:38:56 | Expected 400 status code but got 500 status code instead | file: tests/test_company/test_get_companies.py::TestGetCompanies::test_pagination[0-10-HTTPStatus.BAD_REQUEST] (setup)
 ERROR | 2025-03-24 22:38:56 | Expected 400 status code but got 500 status code instead | file: tests/test_company/test_get_companies.py::TestGetCompanies::test_pagination[-1-10-HTTPStatus.BAD_REQUEST] (setup)
 ERROR | 2025-03-24 22:39:05 | Expected 400 status code but got 301 status code instead | file: tests/test_company/test_get_company_by_id.py::TestGetCompanyById::test_get_company_by_invalid_id[] (setup)
+ERROR | 2025-04-11 18:42:46 | Expected 201 status code but got 400 status code instead | file: tests/test_company/test_create_company.py::TestCreateCompany::test_create_saas_company_with_invoice_customer_ids (setup)
+ERROR | 2025-04-11 18:48:55 | 9 validation errors for CompanyDetailsSchema
+id
+  Field required [type=missing, input_value={'message': 'it is forbid...ent integration source'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.9/v/missing
+name
+  Field required [type=missing, input_value={'message': 'it is forbid...ent integration source'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.9/v/missing
+is_external
+  Field required [type=missing, input_value={'message': 'it is forbid...ent integration source'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.9/v/missing
+integration_source
+  Field required [type=missing, input_value={'message': 'it is forbid...ent integration source'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.9/v/missing
+auto_assign_enabled
+  Field required [type=missing, input_value={'message': 'it is forbid...ent integration source'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.9/v/missing
+eta_enabled
+  Field required [type=missing, input_value={'message': 'it is forbid...ent integration source'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.9/v/missing
+external_license
+  Field required [type=missing, input_value={'message': 'it is forbid...ent integration source'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.9/v/missing
+check_courier_slot_enabled
+  Field required [type=missing, input_value={'message': 'it is forbid...ent integration source'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.9/v/missing
+created_at
+  Field required [type=missing, input_value={'message': 'it is forbid...ent integration source'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.9/v/missing | file: src.validator
+ERROR | 2025-04-11 18:54:47 | Expected 201 status code but got 400 status code instead | file: tests/test_company/test_create_company.py::TestCreateCompany::test_create_iiko_company_with_invoice_customer_ids (setup)
