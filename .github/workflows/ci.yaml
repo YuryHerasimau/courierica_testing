@@ -1,0 +1,62 @@
+name: Tests With Allure
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      BASE_URL: ${{ secrets.BASE_URL }}
+      ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+      LOGISTICIAN_SAAS_USERNAME: ${{ secrets.LOGISTICIAN_SAAS_USERNAME }}
+      LOGISTICIAN_SAAS_PASSWORD: ${{ secrets.LOGISTICIAN_SAAS_PASSWORD }}
+      COURIER_SAAS_PHONE: ${{ secrets.COURIER_SAAS_PHONE }}
+      COURIER_SAAS_CODE: ${{ secrets.COURIER_SAAS_CODE }}
+      COURIER_SAAS_ID: ${{ secrets.COURIER_SAAS_ID }}
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          pytest -s -v -k test_any_order_delivery --alluredir=allure-results
+
+      - name: Load test report history
+        uses: actions/checkout@v3
+        if: always()
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Build test report
+        uses: simple-elf/allure-report-action@v1.7
+        if: always()
+        with:
+          gh_pages: gh-pages
+          allure-history: allure-history
+          allure-results: allure-results
+
+      - name: Publish test report
+        uses: peaceiris/actions-gh-pages@v3
+        if: always()
+        env:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history

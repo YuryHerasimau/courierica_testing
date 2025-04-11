@@ -37,3 +37,9 @@ created_at
   Field required [type=missing, input_value={'message': 'it is forbid...ent integration source'}, input_type=dict]
     For further information visit https://errors.pydantic.dev/2.9/v/missing | file: src.validator
 ERROR | 2025-04-11 18:54:47 | Expected 201 status code but got 400 status code instead | file: tests/test_company/test_create_company.py::TestCreateCompany::test_create_iiko_company_with_invoice_customer_ids (setup)
+ERROR | 2025-04-11 19:31:53 | Expected status 'closed', but got 'performing' for route 1341c23d-8da7-455b-bf48-d640c7814578. | file: tests/e2e/test_delivery_couier_flow.py::TestDeliveryCourierFlow::test_multiple_deliveries_routing_flow (setup)
+ERROR | 2025-04-11 19:31:58 | Expected status 'closed', but got 'performing' for route 1341c23d-8da7-455b-bf48-d640c7814578. | file: tests/e2e/test_delivery_couier_flow.py::TestDeliveryCourierFlow::test_multiple_deliveries_routing_flow (setup)
+ERROR | 2025-04-11 19:31:58 | Expected status 'closed', but got 'performing' for route 1341c23d-8da7-455b-bf48-d640c7814578. | file: tests/e2e/test_delivery_couier_flow.py::TestDeliveryCourierFlow::test_multiple_deliveries_routing_flow (setup)
+ERROR | 2025-04-11 19:32:03 | Expected status 'closed', but got 'performing' for route 1341c23d-8da7-455b-bf48-d640c7814578. | file: tests/e2e/test_delivery_couier_flow.py::TestDeliveryCourierFlow::test_multiple_deliveries_routing_flow (setup)
+ERROR | 2025-04-11 19:32:03 | Expected status 'closed', but got 'performing' for route 1341c23d-8da7-455b-bf48-d640c7814578. | file: tests/e2e/test_delivery_couier_flow.py::TestDeliveryCourierFlow::test_multiple_deliveries_routing_flow (setup)
+ERROR | 2025-04-11 19:32:03 | Expected status 'closed', but got 'performing' for route 1341c23d-8da7-455b-bf48-d640c7814578. | file: tests/e2e/test_delivery_couier_flow.py::TestDeliveryCourierFlow::test_multiple_deliveries_routing_flow (setup)
