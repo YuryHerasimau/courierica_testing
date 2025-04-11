@@ -1,0 +1,9 @@
+"Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
+"passed","Fri Apr 11 17:43:29 GMT 2025","Fri Apr 11 17:44:53 GMT 2025","84227","tests.e2e","test_delivery_couier_flow","TestDeliveryCourierFlow","","","End-to-End Test: Single Order Delivery Flow","
+        Проверка полного цикла выполнения доставки заданного количество заказов:
+        - Создание доставки на рандомный адрес.
+        - Включение смены курьера.
+        - Назначение курьера на доставку.
+        - Выполнение всех этапов доставки (""pickup_arrived"", ""pickuped"", ""delivered"").
+        - Завершение доставки с учетом ограничения на кнопку 'Передал' в приложении курьера.
+        "
