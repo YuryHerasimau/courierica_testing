@@ -16,6 +16,8 @@ jobs:
       ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
       LOGISTICIAN_SAAS_USERNAME: ${{ secrets.LOGISTICIAN_SAAS_USERNAME }}
       LOGISTICIAN_SAAS_PASSWORD: ${{ secrets.LOGISTICIAN_SAAS_PASSWORD }}
+      LOGISTICIAN_IIKO_USERNAME: ${{ secrets.LOGISTICIAN_IIKO_USERNAME }}
+      LOGISTICIAN_IIKO_PASSWORD: ${{ secrets.LOGISTICIAN_IIKO_PASSWORD }}
       COURIER_SAAS_PHONE: ${{ secrets.COURIER_SAAS_PHONE }}
       COURIER_SAAS_CODE: ${{ secrets.COURIER_SAAS_CODE }}
       COURIER_SAAS_ID: ${{ secrets.COURIER_SAAS_ID }}
@@ -56,7 +58,7 @@ jobs:
       - name: Publish test report
         uses: peaceiris/actions-gh-pages@v3
         if: always()
-        env:
+        with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: allure-history
