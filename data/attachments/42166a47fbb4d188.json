@@ -1,0 +1,14 @@
+{
+    "company_id": "ac6d1196-3488-49b0-b670-8361bca1d8d6",
+    "pickup_point_id": "9f8896d7-3f85-4d8c-9d6e-e0b9c672cf9a",
+    "recipient_address": "с. Пенза, ш. Л.Толстого, д. 43 стр. 7, 986177",
+    "recipient_point": {
+        "latitude": 53.957291,
+        "longitude": 27.494192
+    },
+    "recipient_phone": "8 966 018 10 12",
+    "recipient_name": "Первый завод",
+    "paid": true,
+    "time_from": "2025-04-14T12:52:54Z",
+    "time_till": "2025-04-14T15:52:54Z"
+}
