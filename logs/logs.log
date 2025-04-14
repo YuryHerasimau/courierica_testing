@@ -43,3 +43,5 @@ ERROR | 2025-04-11 19:31:58 | Expected status 'closed', but got 'performing' for
 ERROR | 2025-04-11 19:32:03 | Expected status 'closed', but got 'performing' for route 1341c23d-8da7-455b-bf48-d640c7814578. | file: tests/e2e/test_delivery_couier_flow.py::TestDeliveryCourierFlow::test_multiple_deliveries_routing_flow (setup)
 ERROR | 2025-04-11 19:32:03 | Expected status 'closed', but got 'performing' for route 1341c23d-8da7-455b-bf48-d640c7814578. | file: tests/e2e/test_delivery_couier_flow.py::TestDeliveryCourierFlow::test_multiple_deliveries_routing_flow (setup)
 ERROR | 2025-04-11 19:32:03 | Expected status 'closed', but got 'performing' for route 1341c23d-8da7-455b-bf48-d640c7814578. | file: tests/e2e/test_delivery_couier_flow.py::TestDeliveryCourierFlow::test_multiple_deliveries_routing_flow (setup)
+ERROR | 2025-04-14 11:51:33 | Failed to fetch courier ID: 400. URL: /user. | file: services.auth_service
+ERROR | 2025-04-14 11:54:12 | Failed to fetch courier ID: 400. URL: https://logistics.bsl.dev/api/user. | file: services.auth_service

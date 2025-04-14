@@ -15,5 +15,10 @@ ENV/
 env.bak/
 venv.bak/
 
-# TODO
+# Debug
 TODO
+debug.log
+
+# Allure reports
+allure-results/
+allure-report/

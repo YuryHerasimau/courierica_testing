@@ -145,32 +145,6 @@ The framework is designed to run on CI/CD pipelines (e.g., GitHub Actions, GitLa
 * Allure reports for easy debugging
 * Parallel test execution to speed up validation
 
-Example GitHub Actions workflow:
-``` yaml
-name: API Tests
-on: [push, pull_request]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      - name: Run tests
-        run: pytest --alluredir=allure-results
-      - name: Upload Allure Report
-        uses: actions/upload-artifact@v3
-        with:
-          name: allure-results
-          path: allure-results
-```
-
 # Time ⏱️ & Cost Savings 💸
 
 Automating tests with this framework results in:
@@ -182,5 +156,5 @@ Automating tests with this framework results in:
 
 # Contact 📧
 
-For questions or contributions, reach out to `yl.herasimau@gmail.com`.
+For questions or contributions, please <a href="mailto:yl.herasimau@gmail.com">contact us</a>.
 

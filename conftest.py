@@ -1,7 +1,7 @@
 import pytest
 import os
 import time
-from services.auth_service import AuthService
+from services.auth_service import AuthService, Role
 
 
 @pytest.fixture
@@ -15,45 +15,39 @@ def get_test_name():
 @pytest.fixture
 def auth_headers():
     """
-    Универсальная фикстура для получения токенов авторизации.
-    Принимает роль и тип пользователя (курьер или нет).
+    Универсальная фикстура для получения заголовков авторизации.
+    Использует обновленный AuthService с поддержкой Role enum.
+    
+    Пример использования:
+    - Для администратора: auth_headers(Role.ADMIN)
+    - Для логиста: auth_headers(Role.LOGIST)
+    - Для курьера: auth_headers(Role.COURIER)
     """
-    def get_headers(role, is_courier=False):
-        if is_courier:
-            token = AuthService.get_access_token_for_courier(role)
-        else:
-            token = AuthService.get_access_token(role)
+    def _get_headers(role: Role):
+        token = AuthService.get_access_token(role)
         return {"Authorization": f"Bearer {token}"}
-
-    return get_headers
+    
+    return _get_headers
 
 @pytest.fixture
 def admin_auth_headers(auth_headers):
-    """
-    Фикстура для получения headers администратора.
-    """
-    return auth_headers("ADMIN")
+    """Фикстура для получения headers администратора."""
+    return auth_headers(Role.ADMIN)
 
 @pytest.fixture
 def logistician_saas_auth_headers(auth_headers):
-    """
-    Фикстура для получения headers логиста SaaS.
-    """
-    return auth_headers("LOGISTICIAN_SAAS")
+    """Фикстура для получения headers логиста SaaS."""
+    return auth_headers(Role.LOGISTICIAN_SAAS)
 
 @pytest.fixture
 def courier_saas_auth_headers(auth_headers):
-    """
-    Фикстура для получения headers курьера SaaS.
-    """
-    return auth_headers("COURIER_SAAS", is_courier=True)
+    """Фикстура для получения headers курьера SaaS."""
+    return auth_headers(Role.COURIER_SAAS)
 
 @pytest.fixture
 def logistician_iiko_auth_headers(auth_headers):
-    """
-    Фикстура для получения headers логиста iiko.
-    """
-    return auth_headers("LOGISTICIAN_IIKO")
+    """Фикстура для получения headers логиста iiko."""
+    return auth_headers(Role.LOGISTICIAN_IIKO)
 
 @pytest.fixture(scope="class")
 def courier_data():
