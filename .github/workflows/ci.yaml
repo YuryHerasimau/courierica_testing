@@ -39,26 +39,21 @@ jobs:
         run: |
           pytest -s -v -k test_any_order_delivery --alluredir=allure-results
 
-      - name: Load test report history
-        uses: actions/checkout@v3
-        if: always()
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: gh-pages
+      - name: Prepare Allure report
+        run: |
+          allure generate allure-results -o allure-report --clean
 
-      - name: Build test report
-        uses: simple-elf/allure-report-action@v1.7
-        if: always()
+      - name: Upload Allure report
+        uses: actions/upload-artifact@v3
         with:
-          gh_pages: gh-pages
-          allure_history: allure-history
-          allure_results: build/allure-results
+          name: allure-report
+          path: allure-report
 
-      - name: Publish test report
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         uses: peaceiris/actions-gh-pages@v3
-        if: always()
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: allure-history
+          publish_dir: allure-report
+          force_orphan: true
