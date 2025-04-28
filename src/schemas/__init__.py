@@ -13,3 +13,4 @@ class GetDeliverySchemas:
 
     create_delivery = delivery_response_schema.DeliveryDetailsSchema
     get_delivery_by_id = delivery_response_schema.DeliveryDetailsSchema
+    get_deliveries = delivery_response_schema.DeliveriesListSchema

@@ -18,3 +18,6 @@ def get_pickup_point_endpoints():
 
 def get_route_endpoints():
     return Endpoints.RouteEndpoints()
+
+def get_iiko_endpoints():
+    return Endpoints.IikoEndpoints()

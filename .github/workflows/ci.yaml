@@ -21,6 +21,7 @@ jobs:
       COURIER_SAAS_PHONE: ${{ secrets.COURIER_SAAS_PHONE }}
       COURIER_SAAS_CODE: ${{ secrets.COURIER_SAAS_CODE }}
       COURIER_SAAS_ID: ${{ secrets.COURIER_SAAS_ID }}
+      IIKO_API_LOGIN: ${{ secrets.IIKO_API_LOGIN }}
     
     steps:
       - uses: actions/checkout@v4
@@ -41,6 +42,7 @@ jobs:
       - name: Run tests
         run: |
           pytest -s -v -k test_any_order_delivery --alluredir=allure-results
+          pytest -s -v -k test_create_iiko_delivery --alluredir=allure-results
 
       - name: Install Allure
         run: |

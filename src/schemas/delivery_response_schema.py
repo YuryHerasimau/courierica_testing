@@ -30,14 +30,14 @@ class Event(BaseModel):
     id: str
     type: str
     name: str
-    author: Author
+    author: Optional[Author]
     point: Optional[Point]
     comment: Optional[str]
     created_at: datetime
 
 class Specification(BaseModel):
     items: Optional[List]
-    delivered_partially: bool
+    delivered_partially: Optional[bool] = False
 
 class DeliveryDetailsSchema(BaseModel):
     id: str
@@ -84,3 +84,12 @@ class DeliveryDetailsSchema(BaseModel):
     currency: str
     route_step_points_fact: List[Point] = Field(default_factory=List)
     route_step_points_plan: List[Point] = Field(default_factory=List)
+
+class Pagination(BaseModel):
+    page: int
+    per_page: int
+    total: int
+
+class DeliveriesListSchema(BaseModel):
+    deliveries: List[DeliveryDetailsSchema]
+    pagination: Pagination

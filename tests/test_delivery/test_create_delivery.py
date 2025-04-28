@@ -51,11 +51,11 @@ class TestCreateDelivery:
         )
 
         # Получаем ID созданного заказа
-        created_delivery_id = response.json().get("id")
+        delivery_id = response.json().get("id")
 
         # Выполнение GET-запроса для проверки созданной доставки
         get_response  = self.request.get(
-            url=f"{self.url.list_of_deliveries}/{created_delivery_id}",
+            url=f"{self.url.list_of_deliveries}/{delivery_id}",
             headers=logistician_saas_auth_headers,
         )
         # print(get_response.json())

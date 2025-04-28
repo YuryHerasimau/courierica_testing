@@ -14,61 +14,58 @@ This framework helps to:
 
 ## Project structure 🗂️
 
+### Project architecture
+
+```mermaid
+graph TD
+    A[DeliveryGenerator/IikoDeliveryGenerator] -->|Generates DeliveryDataClass/IikoDeliveryDataClass| B[PrepareDeliveryData/PrepareIikoDeliveryData]
+    B -->|Generates JSON| C[MyRequests]
+    C -->|Sends request| D{API}
+    D -->|SAAS API| E[SAAS Endpoints: Delivery/ Courier/ PickupPoint/ Company etc]
+    D -->|External API| F[IIKO Endpoints: create_order/ check_status/ update_order_status]
+    D -->|Returns response| G[Validator]
+    G -->|Validates via GetDeliverySchemas| H[Allure Report]
+    
+    subgraph Data Layer
+    A
+    style A fill:#f9f,stroke:#333
+    end
+    
+    subgraph Preparation Layer
+    B
+    style B fill:#bbf,stroke:#333
+    end
+    
+    subgraph Client Layer
+    C
+    style C fill:#9f9,stroke:#333
+    end
+    
+    subgraph API Targets
+    E
+    F
+    style E fill:#f96,stroke:#333
+    style F fill:#f96,stroke:#333
+    end
+    
+    subgraph Validation Layer
+    G
+    style G fill:#ff9,stroke:#333
+    end
 ```
-courierica_testing/
-├── allure-report/                          # Allure test reports
-├── allure-results/                         # Allure test results
-├── data/                                   # Data models and constants
-│   ├── company_dataclass.py                # Company data model
-│   ├── delivery_dataclass.py               # Delivery data model
-│   ├── endpoints.py                        # API endpoints
-├── generator/                              # Data generators
-│   ├── base_generator.py                   # Base data generator (uses Faker)
-│   ├── company_generator.py                # Company data generator
-│   ├── delivery_generator.py               # Delivery data generator
-├── logs/                                   # Log storage
-│   ├── logs.log                            # Main log file
-├── services/                               # API service interactions
-│   ├── auth_service.py                     # Authentication and token management
-│   ├── delivery_service.py                 # Delivery operations
-│   ├── courier_service.py                  # Courier operations
-│   ├── company_service.py                  # Company management
-│   ├── pickup_point_service.py             # Pickup points management
-│   ├── route_service.py                    # Route planning
-├── src/
-│   ├── prepare_data/                       # Data preparation utilities
-│   │   ├── prepare_basic_data.py           # General data preparation
-│   │   ├── prepare_company_data.py         # Company data preparation
-│   │   ├── prepare_delivery_data.py        # Delivery data preparation
-│   ├── schemas/                            # API response validation schemas
-│   │   ├── company_request_schema.py
-│   │   ├── company_response_schema.py
-│   │   ├── delivery_request_schema.py
-│   │   ├── delivery_response_schema.py
-│   ├── assertions.py                       # Assertion helpers
-│   ├── http_methods.py                     # HTTP request utilities
-│   ├── logger.py                           # Logging setup
-│   ├── validator.py                        # Response validation
-├── tests/                                  # Test suites
-│   ├── e2e/                                # End-to-End tests
-│   │   ├── config/
-│   │   │   ├── geo_updates.json
-│   │   │   ├── order_data.py
-│   │   ├── test_delivery_courier_flow.py
-│   ├── test_company/                       # Company API tests
-│   │   ├── test_create_company.py
-│   │   ├── test_update_company.py
-│   │   ├── test_get_company.py
-│   │   ├── test_get_companies.py
-│   ├── test_delivery/                      # Delivery API tests
-│   │   ├── test_create_delivery.py
-├── .gitignore                              # Ignore files for Git
-├── conftest.py                             # Pytest fixtures
-├── functions.py                            # Helper functions
-├── pytest.ini                              # Pytest configuration
-├── requirements.txt                        # Dependencies
-└── settings.py                             # Global settings
-```
+
+### System components
+
+| Component  | Project Path | Purpose |
+| ------------- | ------------- | ------------- |
+| DeliveryGenerator | generator/delivery_generator.py | Generating data for SAAS orders |
+| IikoDeliveryGenerator | generator/iiko_delivery_generator.py | Generating data for IIKO orders |
+| PrepareDeliveryData | src/prepare_data/prepare_delivery_data.py, src/prepare_data/prepare_iiko_delivery_data.py | Preparing data for API |
+| MyRequests | src/http_methods.py | Custom HTTP client (httpx wrapper) |
+| Validator | src/validator.py | Validating responses with Pydantic |
+| conftest.py | courierica_testing/conftest.py | Global pytest fixtures, setting up the environment |
+| settings.py | courierica_testing/settings.py | Project configurations, environment variables |
+| .env | courierica_testing/.env | Personal environment variables (not under git) |
 
 # Technologies Used ⭐
 
@@ -79,6 +76,46 @@ courierica_testing/
 * `allure-pytest` – Test reporting
 * `python-dotenv` – Environment variable management
 * `Faker` – Fake data generation
+
+# Schema
+
+```mermaid
+graph TD
+    A[DeliveryGenerator/IikoDeliveryGenerator] -->|Генерирует DeliveryDataClass/IikoDeliveryDataClass| B[PrepareDeliveryData/PrepareIikoDeliveryData]
+    B -->|Формирует JSON| C[MyRequests]
+    C -->|Отправляет запрос| D{API}
+    D -->|SAAS API| E[Internal Courierica Endpoints: Delivery/Courier/Company etc]
+    D -->|Внешнее API| F[External IIKO Endpoints]
+    D -->|Возвращает ответ| G[Validator]
+    G -->|Проверяет через GetDeliverySchemas/GetIikoDeliverySchemas| H[Allure Report]
+    
+    subgraph Data Layer
+    A
+    style A fill:#f9f,stroke:#333
+    end
+    
+    subgraph Preparation Layer
+    B
+    style B fill:#bbf,stroke:#333
+    end
+    
+    subgraph Client Layer
+    C
+    style C fill:#9f9,stroke:#333
+    end
+    
+    subgraph API Targets
+    E
+    F
+    style E fill:#f96,stroke:#333
+    style F fill:#f96,stroke:#333
+    end
+    
+    subgraph Validation Layer
+    G
+    style G fill:#ff9,stroke:#333
+    end
+```
 
 # Getting Started
 

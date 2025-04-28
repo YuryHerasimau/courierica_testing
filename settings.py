@@ -16,7 +16,8 @@ class Settings(BaseSettings):
 
     LOGISTICIAN_IIKO_USERNAME: str
     LOGISTICIAN_IIKO_PASSWORD: str
-    
+
+    IIKO_API_LOGIN: str
 
     class Config:
         env_file = ".env"
