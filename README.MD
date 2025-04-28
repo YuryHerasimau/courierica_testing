@@ -77,46 +77,6 @@ graph TD
 * `python-dotenv` – Environment variable management
 * `Faker` – Fake data generation
 
-# Schema
-
-```mermaid
-graph TD
-    A[DeliveryGenerator/IikoDeliveryGenerator] -->|Генерирует DeliveryDataClass/IikoDeliveryDataClass| B[PrepareDeliveryData/PrepareIikoDeliveryData]
-    B -->|Формирует JSON| C[MyRequests]
-    C -->|Отправляет запрос| D{API}
-    D -->|SAAS API| E[Internal Courierica Endpoints: Delivery/Courier/Company etc]
-    D -->|Внешнее API| F[External IIKO Endpoints]
-    D -->|Возвращает ответ| G[Validator]
-    G -->|Проверяет через GetDeliverySchemas/GetIikoDeliverySchemas| H[Allure Report]
-    
-    subgraph Data Layer
-    A
-    style A fill:#f9f,stroke:#333
-    end
-    
-    subgraph Preparation Layer
-    B
-    style B fill:#bbf,stroke:#333
-    end
-    
-    subgraph Client Layer
-    C
-    style C fill:#9f9,stroke:#333
-    end
-    
-    subgraph API Targets
-    E
-    F
-    style E fill:#f96,stroke:#333
-    style F fill:#f96,stroke:#333
-    end
-    
-    subgraph Validation Layer
-    G
-    style G fill:#ff9,stroke:#333
-    end
-```
-
 # Getting Started
 
 ## Installation 🐱‍💻

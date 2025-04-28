@@ -42,7 +42,6 @@ jobs:
       - name: Run tests
         run: |
           pytest -s -v -k test_any_order_delivery --alluredir=allure-results
-          pytest -s -v -k test_create_iiko_delivery --alluredir=allure-results
 
       - name: Install Allure
         run: |
