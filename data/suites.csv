@@ -1,0 +1,9 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"
+        Проверка полного цикла выполнения доставки заданного количество заказов:
+        - Создание доставки на рандомный адрес.
+        - Включение смены курьера.
+        - Назначение курьера на доставку.
+        - Выполнение всех этапов доставки (""pickup_arrived"", ""pickuped"", ""delivered"").
+        - Завершение доставки с учетом ограничения на кнопку 'Передал' в приложении курьера.
+        ","159944","End-to-End Test: Single Order Delivery Flow","tests.e2e","Tue Jun 10 14:33:58 UTC 2025","passed","Tue Jun 10 14:36:38 UTC 2025","TestDeliveryCourierFlow","test_delivery_couier_flow","",""
