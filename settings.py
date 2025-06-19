@@ -18,9 +18,12 @@ class Settings(BaseSettings):
     LOGISTICIAN_IIKO_PASSWORD: str
 
     IIKO_API_LOGIN: str
+    IIKO_ORGANIZATION_ID: str
+    COURIERICA_PICKUP_POINT_ID: str
 
     class Config:
         env_file = ".env"
 
 
 settings = Settings()
+print(settings.BASE_URL) 

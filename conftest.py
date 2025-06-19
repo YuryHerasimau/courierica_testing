@@ -1,7 +1,9 @@
+import httpx
 import pytest
 import os
 import time
 from services.auth_service import AuthService, Role
+from settings import settings
 
 
 @pytest.fixture
@@ -43,6 +45,33 @@ def logistician_saas_auth_headers(auth_headers):
 def courier_saas_auth_headers(auth_headers):
     """Фикстура для получения headers курьера SaaS."""
     return auth_headers(Role.COURIER_SAAS)
+
+@pytest.fixture
+def courier_iiko_auth_headers(auth_headers, request):
+    """Фикстура для получения headers конкретного курьера IIKO."""
+    # Если передали параметр courier_id - авторизуем конкретного курьера
+    if hasattr(request, "param") and request.param:
+        courier_id = request.param
+        admin_headers = auth_headers(Role.ADMIN)
+
+        # Получаем телефон курьера
+        phone = AuthService.get_courier_phone(courier_id, admin_headers)
+        # Запрашиваем SMS код
+        AuthService.request_sms_code(phone)
+        # Получаем SMS код через админский эндпоинт
+        sms_code = AuthService.get_sms_code_for_courier(courier_id, admin_headers)
+
+        # Авторизуемся как курьер
+        response = httpx.post(
+            f"{settings.BASE_URL}/login/phone/code",
+            json={"phone": phone, "code": sms_code}
+        )
+        if response.status_code != 200:
+            raise Exception(f"Courier auth failed: {response.text}")
+        return {"Authorization": f"Bearer {response.json()['access_token']}"}
+
+    # # Иначе используем стандартного тестового курьера
+    # return auth_headers(Role.COURIER_IIKO)
 
 @pytest.fixture
 def logistician_iiko_auth_headers(auth_headers):

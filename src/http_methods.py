@@ -27,12 +27,11 @@ class MyRequests:
 
     @staticmethod
     def __send(url: str, data: str, headers: dict, cookies: dict, method: str):
-        base_url = f"{settings.BASE_URL}{url}"
         if url.startswith(('http://', 'https://')):
             base_url = url
         else:
             base_url = f"{settings.BASE_URL}{url}"
-        # print(f"Sending {method} request to {base_url} with data: {data}\n\n")
+        # print(f"Sending {method} request to {base_url} with data: {data} and headers: {headers}\n\n")
 
         if headers is None:
             headers = {"Content-Type": "application/json"}

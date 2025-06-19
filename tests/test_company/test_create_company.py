@@ -20,14 +20,16 @@ class TestCreateCompany:
     company_generator = CompanyGenerator()
     company_data = PrepareCompanyData()
 
+    # SAAS
+
     @allure.title("Create SAAS company with firms")
     @allure.severity(allure.severity_level.CRITICAL)
     def test_create_saas_company_with_firms(self, get_test_name, admin_auth_headers):
         info = next(self.company_generator.generate_company(integration_source="saas", firms_count=random.randint(1, 10)))
         data = self.company_data.prepare_company_json(info=info)
-        # print(data)
+        print(data)
         response = self.request.post(url=self.url.create_company, data=data, headers=admin_auth_headers)
-        # print(response.json())
+        print(response.json())
         self.assertions.assert_status_code(
             response=response,
             expected_status_code=HTTPStatus.CREATED,
@@ -67,7 +69,9 @@ class TestCreateCompany:
             test_name=get_test_name,
         )
 
-    @allure.title("Create SAAS company with firms and invoice customer ids")
+    # IIKO
+    
+    @allure.title("Create IIKO company with firms and invoice customer ids")
     @allure.severity(allure.severity_level.CRITICAL)
     def test_create_iiko_company_with_firms_and_invoice_customer_ids(self, get_test_name, admin_auth_headers):
         info = next(self.company_generator.generate_company(
@@ -87,7 +91,7 @@ class TestCreateCompany:
         )
         self.validator.validate_response(response=response, model=GetCompanySchemas.create_company)
 
-    @allure.title("Create SAAS company without firms")
+    @allure.title("Create IIKO company without firms")
     @allure.severity(allure.severity_level.CRITICAL)
     @allure.description(
         "Company create failed because validate failed: firm list empty"
@@ -98,10 +102,11 @@ class TestCreateCompany:
             integration_key_length=random.randint(8, 50),
             invoice_customer_ids_count=random.randint(1, 10),
         ))
+        print(info)
         data = self.company_data.prepare_company_json(info=info)
-        # print(data)
+        print(data)
         response = self.request.post(url=self.url.create_company, data=data, headers=admin_auth_headers)
-        # print(response.json())
+        print(response.json())
         self.assertions.assert_status_code(
             response=response,
             expected_status_code=HTTPStatus.BAD_REQUEST,

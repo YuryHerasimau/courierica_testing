@@ -232,3 +232,36 @@ ERROR | 2025-04-28 13:27:52 | 1 validation error for DeliveryDetailsSchema
 specification.delivered_partially
   Field required [type=missing, input_value={'items': [{'id': '7b3525...ers': [], 'items': []}]}, input_type=dict]
     For further information visit https://errors.pydantic.dev/2.9/v/missing | file: src.validator
+ERROR | 2025-05-14 14:24:11 | SMS request failed: 204 for phone 78633521498 | file: services.auth_service
+ERROR | 2025-05-14 16:10:28 | Expected 200 status code but got 404 status code instead | file: root
+ERROR | 2025-05-14 19:33:02 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-05-14 19:33:07 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-05-14 19:33:07 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-05-14 19:33:12 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-05-14 19:33:12 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-05-14 19:33:12 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-05-14 19:41:51 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-05-14 19:41:56 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-05-14 19:41:56 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-05-14 19:42:01 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-05-14 19:42:01 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-05-14 19:42:01 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-05-14 20:06:26 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-05-14 20:06:31 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-05-14 20:06:31 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-05-14 20:06:36 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-05-14 20:06:36 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-05-14 20:06:36 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-05-19 17:02:54 | SMS request failed: 429 for phone 76660000000 | file: services.auth_service
+ERROR | 2025-05-19 18:04:20 | Failed to get courier phone: 400 | file: services.auth_service
+ERROR | 2025-05-19 18:27:26 | Failed to get courier phone: 400 | file: services.auth_service
+ERROR | 2025-05-19 18:36:03 | Failed to get courier phone: 400 | file: services.auth_service
+ERROR | 2025-05-20 09:56:01 | Auth failed: 502 for role logistician_saas | file: services.auth_service
+ERROR | 2025-05-22 17:02:58 | Auth failed: 502 for role admin | file: services.auth_service
+ERROR | 2025-06-10 18:06:15 | 1 validation error for CompaniesListSchema
+companies.7.integration_source
+  Value error, Invalid integration source: tillypad. Integration source must be one of ["iiko", "1c", "rkeeper", "saas"] [type=value_error, input_value='tillypad', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.9/v/value_error | file: src.validator
+ERROR | 2025-06-10 18:06:16 | Expected 400 status code but got 500 status code instead | file: tests/test_company/test_get_companies.py::TestGetCompanies::test_pagination[0-10-HTTPStatus.BAD_REQUEST] (setup)
+ERROR | 2025-06-10 18:06:17 | Expected 400 status code but got 500 status code instead | file: tests/test_company/test_get_companies.py::TestGetCompanies::test_pagination[-1-10-HTTPStatus.BAD_REQUEST] (setup)
+ERROR | 2025-06-10 18:06:18 | Expected 400 status code but got 301 status code instead | file: tests/test_company/test_get_company_by_id.py::TestGetCompanyById::test_get_company_by_invalid_id[] (setup)

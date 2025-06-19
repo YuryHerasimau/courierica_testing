@@ -107,7 +107,7 @@ class IikoDeliveryGenerator(BaseGenerator):
                 "isProcessedExternally": True,
                 "paymentAdditionalData": None,
                 "isFiscalizedExternally": False,
-                "isPrepay": False
+                "isPrepay": True
             }]
         return payments_data
     
