@@ -265,3 +265,26 @@ companies.7.integration_source
 ERROR | 2025-06-10 18:06:16 | Expected 400 status code but got 500 status code instead | file: tests/test_company/test_get_companies.py::TestGetCompanies::test_pagination[0-10-HTTPStatus.BAD_REQUEST] (setup)
 ERROR | 2025-06-10 18:06:17 | Expected 400 status code but got 500 status code instead | file: tests/test_company/test_get_companies.py::TestGetCompanies::test_pagination[-1-10-HTTPStatus.BAD_REQUEST] (setup)
 ERROR | 2025-06-10 18:06:18 | Expected 400 status code but got 301 status code instead | file: tests/test_company/test_get_company_by_id.py::TestGetCompanyById::test_get_company_by_invalid_id[] (setup)
+ERROR | 2025-06-30 13:43:03 | Failed to get SMS code: 500 for courier aaefc2fb-57fa-486a-ae23-fdd559207e47 | file: services.auth_service
+ERROR | 2025-06-30 15:00:49 | SMS request failed: 429 for phone 78633521498 | file: services.auth_service
+ERROR | 2025-06-30 19:44:56 | SMS request failed: 429 for phone 78633521498 | file: services.auth_service
+ERROR | 2025-07-01 17:58:40 | SMS request failed: 429 for phone 78633521498 | file: services.auth_service
+ERROR | 2025-07-03 14:44:06 | SMS request failed: 429 for phone 78633521498 | file: services.auth_service
+ERROR | 2025-07-07 12:22:45 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-07-07 12:22:50 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-07-07 12:22:50 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-07-07 12:22:56 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-07-07 12:22:56 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-07-07 12:22:56 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-07-07 12:28:21 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-07-07 12:28:26 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-07-07 12:28:26 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-07-07 12:28:31 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-07-07 12:28:31 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-07-07 12:28:31 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-07-07 12:44:06 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-07-07 12:44:11 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-07-07 12:44:11 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-07-07 12:44:16 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-07-07 12:44:16 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)
+ERROR | 2025-07-07 12:44:16 | Expected 200 status code but got 400 status code instead | file: tests/e2e/test_dispatch.py::TestDispatchIIKO::test_order_rebatch_to_specific_batch (setup)

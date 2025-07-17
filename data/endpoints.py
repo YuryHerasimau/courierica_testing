@@ -30,3 +30,6 @@ class Endpoints:
         update_order_status = "https://api-ru.iiko.services/api/1/deliveries/update_order_delivery_status"
         check_status = "https://api-ru.iiko.services/api/1/commands/status"
         cancel_order = "https://api-ru.iiko.services/api/1/deliveries/cancel"
+        deliver_order = "https://api-ru.iiko.services/api/1/deliveries/update_order_delivery_status"
+        close_order = "https://api-ru.iiko.services/api/1/deliveries/close"
+        list_of_orders_by_statuses_and_dates = "https://api-ru.iiko.services/api/1/deliveries/by_delivery_date_and_status"

@@ -35,6 +35,9 @@ class DeliveryTimeCalculator:
     TIME_COOKING = 20  # время приготовления
     TIME_DROP_OFF = 5  # время на передачу клиенту
     TIME_LATE = 10     # допустимое опоздание
+
+    TIME_LATE_3PL = 10    # Допустимое время опоздания 3PL (мин)
+    TIME_ARRIVE_3PL = 15  # Время подачи 3PL (мин)
     
     @staticmethod
     def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:

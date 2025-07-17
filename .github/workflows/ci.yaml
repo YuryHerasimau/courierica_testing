@@ -22,6 +22,8 @@ jobs:
       COURIER_SAAS_CODE: ${{ secrets.COURIER_SAAS_CODE }}
       COURIER_SAAS_ID: ${{ secrets.COURIER_SAAS_ID }}
       IIKO_API_LOGIN: ${{ secrets.IIKO_API_LOGIN }}
+      IIKO_ORGANIZATION_ID: ${{ secrets.IIKO_ORGANIZATION_ID }}
+      COURIERICA_PICKUP_POINT_ID: ${{ secrets.COURIERICA_PICKUP_POINT_ID }}
     
     steps:
       - uses: actions/checkout@v4
