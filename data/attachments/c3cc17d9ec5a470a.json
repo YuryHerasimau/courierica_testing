@@ -1,0 +1,14 @@
+{
+    "company_id": "ac6d1196-3488-49b0-b670-8361bca1d8d6",
+    "pickup_point_id": "9f8896d7-3f85-4d8c-9d6e-e0b9c672cf9a",
+    "recipient_address": "клх Клин, бул. Учительский, д. 78 к. 396, 457938",
+    "recipient_point": {
+        "latitude": 53.821661,
+        "longitude": 27.522881
+    },
+    "recipient_phone": "8 (675) 262-4265",
+    "recipient_name": "ЗАО «Гуляева»",
+    "paid": true,
+    "time_from": "2025-07-17T14:48:08Z",
+    "time_till": "2025-07-17T15:48:08Z"
+}

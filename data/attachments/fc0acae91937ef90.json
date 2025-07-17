@@ -1,0 +1,14 @@
+{
+    "company_id": "ac6d1196-3488-49b0-b670-8361bca1d8d6",
+    "pickup_point_id": "9f8896d7-3f85-4d8c-9d6e-e0b9c672cf9a",
+    "recipient_address": "п. Долинск, наб. Горняцкая, д. 76 к. 96, 757085",
+    "recipient_point": {
+        "latitude": 53.840266,
+        "longitude": 27.441422
+    },
+    "recipient_phone": "+7 312 592 73 22",
+    "recipient_name": "Прохорова Инкорпорэйтед",
+    "paid": true,
+    "time_from": "2025-07-17T14:49:08Z",
+    "time_till": "2025-07-17T15:49:08Z"
+}
