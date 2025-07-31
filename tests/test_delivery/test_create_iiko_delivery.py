@@ -139,14 +139,14 @@ class TestCreateIikoDelivery:
         )
         self.validator.validate_response(response=get_response, model=GetDeliverySchemas.get_delivery_by_id)
 
-        # ОТМЕНА В АЙКО
-        cancel_response = self.request.post(
-            url=self.iiko_url.cancel_order,
-            data=json.dumps({
-                "organizationId": settings.IIKO_ORGANIZATION_ID,
-                "orderId": order_id
-            }),
-            headers=iiko_headers    
-        )
-        print(cancel_response.json())
+        # # ОТМЕНА В АЙКО
+        # cancel_response = self.request.post(
+        #     url=self.iiko_url.cancel_order,
+        #     data=json.dumps({
+        #         "organizationId": settings.IIKO_ORGANIZATION_ID,
+        #         "orderId": order_id
+        #     }),
+        #     headers=iiko_headers    
+        # )
+        # print(cancel_response.json())
         
