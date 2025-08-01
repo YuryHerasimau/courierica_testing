@@ -1,3 +1,4 @@
+import random
 import time
 import allure
 import pytest
@@ -12,6 +13,7 @@ from src.prepare_data.prepare_iiko_delivery_data import PrepareIikoDeliveryData
 from http import HTTPStatus
 from generator.iiko_delivery_generator import IikoDeliveryGenerator
 from settings import settings
+from functions import load_json
 
 
 @allure.epic("Testing iiko integration")
@@ -76,21 +78,28 @@ class TestCreateIikoDelivery:
     @allure.title("Test create iiko delivery order")
     @allure.severity(allure.severity_level.BLOCKER)
     def test_create_iiko_delivery(self, get_test_name, iiko_headers, logistician_iiko_auth_headers):
+        address_data = load_json("tests/e2e/config/iiko_address_data.json")
+
+        # Генерация случайного адреса и времени
+        address_key, address_info = random.choice(list(address_data.items()))
+        delivery_duration = random.randint(60, 3 * 24 * 60)  # от 1 часа до 3 суток
+
         # Генерация данных
         info = next(self.iiko_delivery_generator.generate_iiko_order(
             organizationId=settings.IIKO_ORGANIZATION_ID,
-            delivery_duration=60,
+            delivery_duration=delivery_duration,
             delivery_point= {
                 "coordinates": {
-                    "latitude": 55.793728,
-                    "longitude": 37.614428
+                    "latitude": address_info["latitude"],
+                    "longitude": address_info["longitude"]
                 },
                 "address": {
                     "type": "city",
-                    "line1": "Москва, улица Сущёвский Вал, 55"
+                    "line1": address_info["line1"]
                 }
             }
         ))
+        # print(info)
 
         # Подготовка запроса
         data = self.iiko_delivery_data.prepare_iiko_delivery_data(info=info)
