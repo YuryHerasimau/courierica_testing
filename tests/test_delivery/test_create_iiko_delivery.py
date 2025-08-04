@@ -4,13 +4,14 @@ import allure
 import pytest
 import json
 from datetime import datetime
+from http import HTTPStatus
+
 from data import get_iiko_endpoints, get_delivery_endpoints
 from src.http_methods import MyRequests
 from src.assertions import Assertions
 from src.validator import Validator
 from src.schemas import GetDeliverySchemas
 from src.prepare_data.prepare_iiko_delivery_data import PrepareIikoDeliveryData
-from http import HTTPStatus
 from generator.iiko_delivery_generator import IikoDeliveryGenerator
 from settings import settings
 from functions import load_json
@@ -81,7 +82,7 @@ class TestCreateIikoDelivery:
         address_data = load_json("tests/e2e/config/iiko_address_data.json")
 
         # Генерация случайного адреса и времени
-        address_key, address_info = random.choice(list(address_data.items()))
+        _, address_info = random.choice(list(address_data.items()))
         delivery_duration = random.randint(60, 3 * 24 * 60)  # от 1 часа до 3 суток
 
         # Генерация данных
@@ -99,16 +100,11 @@ class TestCreateIikoDelivery:
                 }
             }
         ))
-        # print(info)
 
-        # Подготовка запроса
+        # Подготовка и отправка запроса для создания заказа в IIKO
         data = self.iiko_delivery_data.prepare_iiko_delivery_data(info=info)
-
-        # Отправка запроса для создания доставки Iiko
         response = self.request.post(url=self.iiko_url.create_order, data=data, headers=iiko_headers)
-        # print(response.json())
 
-        # Проверка ответа
         self.assertions.assert_status_code(
             response=response,
             expected_status_code=HTTPStatus.OK,
@@ -117,7 +113,6 @@ class TestCreateIikoDelivery:
 
         order_id = response.json()["orderInfo"]["id"]
         correlation_id = response.json()["correlationId"]
-        print(order_id)
         
         # Ожидание успешного создания заказа
         self._wait_for_order_status(
@@ -147,15 +142,3 @@ class TestCreateIikoDelivery:
             test_name=get_test_name,
         )
         self.validator.validate_response(response=get_response, model=GetDeliverySchemas.get_delivery_by_id)
-
-        # # ОТМЕНА В АЙКО
-        # cancel_response = self.request.post(
-        #     url=self.iiko_url.cancel_order,
-        #     data=json.dumps({
-        #         "organizationId": settings.IIKO_ORGANIZATION_ID,
-        #         "orderId": order_id
-        #     }),
-        #     headers=iiko_headers    
-        # )
-        # print(cancel_response.json())
-        
