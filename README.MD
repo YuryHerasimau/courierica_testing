@@ -1,7 +1,7 @@
-# Courierica Testing Framework 🚀
+# Courierica Testing Framework
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-## Overview 👀
+## Overview
 
 Courierica Testing Framework is an API testing framework designed to automate testing for courier-related services. 
 It supports end-to-end (E2E) testing, validation of API responses, and integration testing for various microservices.
@@ -12,7 +12,7 @@ This framework helps to:
 * Save time and reduce costs by catching issues early
 * Enable Continuous Integration (CI) and Continuous Deployment (CD)
 
-## Project structure 🗂️
+## Project structure
 
 ### Project architecture
 
@@ -21,8 +21,8 @@ graph TD
     A[DeliveryGenerator/IikoDeliveryGenerator] -->|Generates DeliveryDataClass/IikoDeliveryDataClass| B[PrepareDeliveryData/PrepareIikoDeliveryData]
     B -->|Generates JSON| C[MyRequests]
     C -->|Sends request| D{API}
-    D -->|SAAS API| E[SAAS Endpoints: Delivery/ Courier/ PickupPoint/ Company etc]
-    D -->|External API| F[IIKO Endpoints: create_order/ check_status/ update_order_status]
+    D -->|Internal SAAS API| E[SAAS Endpoints: Delivery/ Courier/ PickupPoint/ Company etc]
+    D -->|External IIKO API| F[IIKO Endpoints: create_order/ check_status/ update_order_status/ cancel_order etc]
     D -->|Returns response| G[Validator]
     G -->|Validates via GetDeliverySchemas| H[Allure Report]
     
@@ -67,7 +67,7 @@ graph TD
 | settings.py | courierica_testing/settings.py | Project configurations, environment variables |
 | .env | courierica_testing/.env | Personal environment variables (not under git) |
 
-# Technologies Used ⭐
+# Technologies Used
 
 * `Python 3.x` – Main programming language
 * `pytest` – Testing framework
@@ -79,7 +79,7 @@ graph TD
 
 # Getting Started
 
-## Installation 🐱‍💻
+## Installation
 
 Clone the repository:
 ``` bash
@@ -98,7 +98,7 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-## Running Tests 🧪
+## Running Tests
 
 Run all tests:
 ``` bash
@@ -115,7 +115,7 @@ Run a specific test:
 pytest -k test_multiple_deliveries_routing_flow
 ```
 
-## Generate Allure Report 🧾
+## Generate Allure Report
 
 To generate the Allure report, you can use the following command:
 
