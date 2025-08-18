@@ -1,7 +1,11 @@
+import os
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    TEST_ENV: str = "dev"
+
     BASE_URL: str
 
     ADMIN_USERNAME: str
@@ -21,9 +25,19 @@ class Settings(BaseSettings):
     IIKO_ORGANIZATION_ID: str
     COURIERICA_PICKUP_POINT_ID: str
 
+    COURIER_COMPANY_ID: str
+    COURIER_PICKUP_POINT_ID: str
+
     class Config:
-        env_file = ".env"
+        env_file = f".env.{os.getenv('TEST_ENV', 'dev')}"
+
+    @field_validator("TEST_ENV")
+    def check_env(cls, v):
+        allowed = {"dev", "prod", "stage"}
+        if v not in allowed:
+            raise ValueError(f"Invalid TEST_ENV='{v}', must be one of {allowed}")
+        return v
 
 
 settings = Settings()
-print(settings.BASE_URL) 
+print(f"⚙️  Running tests on {settings.TEST_ENV.upper()} environment: {settings.BASE_URL}")

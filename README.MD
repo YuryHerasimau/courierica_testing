@@ -90,7 +90,7 @@ cd courierica_testing
 Create and activate a virtual environment:
 ``` bash
 python -m venv env
-source env/bin/activate  # On Windows use: env\Scripts\activate
+source env/bin/activate  # On Windows: env\Scripts\activate
 ```
 
 Install dependencies:
@@ -100,9 +100,14 @@ pip install -r requirements.txt
 
 ## Running Tests
 
-Run all tests:
+Run all tests (default: dev):
 ``` bash
 pytest -s -v --alluredir=allure-results
+```
+
+Run tests for specific environment (e.g. prod):
+``` bash
+TEST_ENV=prod pytest -s -v --alluredir=allure-results # On Windows (PowerShell): $env:TEST_ENV="prod"; pytest -s -v
 ```
 
 Run a specific test suite:
