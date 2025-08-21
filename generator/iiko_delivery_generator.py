@@ -23,6 +23,7 @@ class IikoDeliveryGenerator(BaseGenerator):
         base_data = {
             "organization_id": organizationId,
             "phone": "+7" + "".join([str(random.randint(0, 9)) for _ in range(10)]),
+            "phone_extension": "4256",
             "delivery_point": delivery_point or {
                 "coordinates": {
                     "latitude": round(55.75 + random.uniform(-0.05, 0.05), 6),

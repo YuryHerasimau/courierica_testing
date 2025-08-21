@@ -22,3 +22,6 @@ debug.log
 # Allure reports
 allure-results/
 allure-report/
+
+# Logs
+logs/

@@ -21,6 +21,7 @@ class PrepareIikoDeliveryData(BaseTestData):
                 "id": None,
                 "externalNumber": info.external_number,
                 "phone": info.phone,
+                "phoneExtension": info.phone_extension,
                 "orderTypeId": info.order_type_id,
                 "orderServiceType": info.order_service_type,
                 "deliveryPoint": info.delivery_point,

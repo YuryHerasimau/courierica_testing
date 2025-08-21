@@ -134,24 +134,3 @@ Alternatively, you can serve the report directly from the results directory usin
 ``` bash
 allure serve allure-results
 ```
-
-## CI/CD Integration 🌐
-
-The framework is designed to run on CI/CD pipelines (e.g., GitHub Actions, GitLab CI, Jenkins):
-* Automated test execution after each commit
-* Allure reports for easy debugging
-* Parallel test execution to speed up validation
-
-# Time ⏱️ & Cost Savings 💸
-
-Automating tests with this framework results in:
-
-* ✅ Faster bug detection – Immediate feedback on API changes
-* ✅ Reduced manual testing effort – Save QA engineering hours
-* ✅ Lower downtime costs – Catch critical errors before production
-* ✅ Efficient debugging – Detailed logs and Allure reports simplify issue tracking
-
-# Contact 📧
-
-For questions or contributions, please <a href="mailto:yl.herasimau@gmail.com">contact us</a>.
-

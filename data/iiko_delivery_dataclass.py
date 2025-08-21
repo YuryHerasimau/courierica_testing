@@ -5,6 +5,7 @@ from typing import Optional, List, Dict, Any
 class IikoDeliveryDataClass:
     organization_id: str
     phone: str
+    phone_extension: str
     delivery_point: Dict[str, Any]
     customer: Dict[str, Any]
     items: List[Dict[str, Any]]
