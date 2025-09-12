@@ -27,6 +27,10 @@ jobs:
       COURIERICA_PICKUP_POINT_ID: ${{ secrets.COURIERICA_PICKUP_POINT_ID }}
       COURIER_COMPANY_ID: ${{ secrets.COURIER_COMPANY_ID }}
       COURIER_PICKUP_POINT_ID: ${{ secrets.COURIER_PICKUP_POINT_ID }}
+      REDIS_HOST: ${{ secrets.REDIS_HOST }}
+      REDIS_PORT: ${{ secrets.REDIS_PORT }}
+      REDIS_SSH_ALIAS: ${{ secrets.REDIS_SSH_ALIAS }}
+      REDIS_SSH_HOST: ${{ secrets.REDIS_SSH_HOST }}
     
     steps:
       - uses: actions/checkout@v4
@@ -46,7 +50,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest -s -v -k test_any_order_delivery --alluredir=allure-results
+          pytest -m e2e --alluredir=allure-results
 
       - name: Install Allure
         run: |

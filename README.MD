@@ -120,6 +120,30 @@ Run a specific test:
 pytest -k test_multiple_deliveries_routing_flow
 ```
 
+Run tests by marker (defined in pytest.ini):
+```
+# Run only smoke tests
+pytest -m smoke
+
+# Run only critical path tests (80% key functionality coverage)
+pytest -m critical_path
+
+# Run extended coverage tests (edge cases, negative tests)
+pytest -m extended
+
+# Run regression (full feature tests)
+pytest -m regression
+
+# Run integration tests
+pytest -m integration
+
+# Combine markers: run smoke OR critical_path
+pytest -m "smoke or critical_path"
+
+# Combine markers: run smoke AND NOT flaky
+pytest -m "smoke and not flaky"
+```
+
 ## Generate Allure Report
 
 To generate the Allure report, you can use the following command:

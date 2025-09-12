@@ -1,5 +1,6 @@
-import time
 import allure
+import pytest
+import time
 from datetime import datetime, timedelta
 
 from data import get_iiko_endpoints
@@ -14,9 +15,8 @@ from tests.e2e.utils.dispatch_calc import DeliveryTimeCalculator
 from functions import load_json
 
 
-@allure.epic(
-    "Testing dispatch v.2.0"
-)
+@allure.epic("Testing dispatch v.2.0")
+@pytest.mark.dispatch_v2
 class TestDispatchIIKO:
     delivery_service = IikoDeliveryService()
     
@@ -58,12 +58,8 @@ class TestDispatchIIKO:
                 courier_headers
             )
 
-    @allure.title("Тест отмена и закрытие всех заказов за сегодняшним день")
-    def test_cancel_and_close_all_orders(self, get_test_name, iiko_headers):
-        self.delivery_service.cancel_and_close_all_orders(iiko_headers, get_test_name)
-
     @allure.title("2 - Перебэтч	- Новый заказ проходит по критериям только в один из незахлопнутых бэтчей")
-    @allure.severity(allure.severity_level.BLOCKER)
+    @allure.severity(allure.severity_level.CRITICAL)
     def test_order_rebatch_to_specific_batch(self, get_test_name, iiko_headers, admin_auth_headers, courier_iiko_data):
         """
         1. Создаем первый батч (ближние адреса)
@@ -149,7 +145,7 @@ class TestDispatchIIKO:
             )
        
     @allure.title("5 - Перебэтч	- Нет времени ждать (заказ переходит в другой существующий батч)")
-    @allure.severity(allure.severity_level.BLOCKER)
+    @allure.severity(allure.severity_level.CRITICAL)
     def test_no_time_to_wait_rebatch_to_existing(self, get_test_name, iiko_headers):
         """
         1. Создаем первый батч с готовящимся заказом                                # 09, 10, 11(+) ---> 11(+)

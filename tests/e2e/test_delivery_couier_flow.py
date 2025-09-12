@@ -1,4 +1,5 @@
 import allure
+import pytest
 import time
 import random
 from datetime import datetime
@@ -18,6 +19,7 @@ from settings import settings
 @allure.epic(
     "Testing delivery creation, delivery assignment and delivery completion by courier for SAAS company"
 )
+@pytest.mark.e2e
 class TestDeliveryCourierFlow:
     auth_service = AuthService()
     delivery_service = DeliveryService()
@@ -42,7 +44,7 @@ class TestDeliveryCourierFlow:
             time.sleep(5)
 
     @allure.title("End-to-End Test: Single Order Delivery Flow")
-    @allure.severity(allure.severity_level.BLOCKER)
+    @allure.severity(allure.severity_level.CRITICAL)
     def test_any_order_delivery(self, get_test_name, logistician_saas_auth_headers, courier_saas_auth_headers):
         """
         Проверка полного цикла выполнения доставки заданного количество заказов:
@@ -106,7 +108,7 @@ class TestDeliveryCourierFlow:
 
 
     @allure.title("End-to-End Test: Multi-Order Routing and Delivery Flow")
-    @allure.severity(allure.severity_level.BLOCKER)
+    @allure.severity(allure.severity_level.CRITICAL)
     def test_multiple_deliveries_routing_flow(self, get_test_name, logistician_saas_auth_headers, courier_saas_auth_headers):
         """
         Проверка полного цикла маршрутизации и выполнения нескольких доставок:
