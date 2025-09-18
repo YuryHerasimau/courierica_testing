@@ -1,12 +1,14 @@
 import allure
+import pytest
+from uuid import uuid4
+
 from data import get_company_endpoints
 from src.http_methods import MyRequests
 from src.assertions import Assertions
 from src.validator import Validator
 from src.schemas import GetCompanySchemas
 from http import HTTPStatus
-from uuid import uuid4
-import pytest
+from settings import settings
 
 
 @allure.epic("Testing get company by id")
@@ -32,7 +34,8 @@ class TestGetCompanyById:
             return companies[0].get("id")
 
     @allure.title("Get company by valid id")
-    @allure.severity(allure.severity_level.BLOCKER)
+    @allure.severity(allure.severity_level.CRITICAL)
+    @pytest.mark.critical_path
     def test_get_company_by_valid_id(
         self,
         get_test_name,
@@ -52,6 +55,7 @@ class TestGetCompanyById:
 
     @allure.title("Get company by random id")
     @allure.severity(allure.severity_level.CRITICAL)
+    @pytest.mark.critical_path
     def test_get_company_by_random_id(self, get_test_name, admin_auth_headers):
         response = self.request.get(
             url=f"{self.url.list_of_companies}/{str(uuid4())}",
@@ -68,18 +72,18 @@ class TestGetCompanyById:
     @pytest.mark.parametrize(
         "invalid_id",
         [
-            "",  # Пустая строка
-            "12345",  # Неправильный формат
-            "invalid-uuid",  # Неправильный UUID
-            "non-existent-id",  # Несуществующий UUID
+            "",
+            "12345",
+            "invalid-uuid",
+            "non-existent-id",
         ],
     )
+    @pytest.mark.extended
     def test_get_company_by_invalid_id(self, get_test_name, admin_auth_headers, invalid_id):
         response = self.request.get(
             url=f"{self.url.list_of_companies}/{invalid_id}",
             headers=admin_auth_headers,
         )
-        # print(response.text)
         self.assertions.assert_status_code(
             response=response,
             expected_status_code=HTTPStatus.BAD_REQUEST,
@@ -88,11 +92,11 @@ class TestGetCompanyById:
 
     @allure.title("Get company by id without auth")
     @allure.severity(allure.severity_level.CRITICAL)
+    @pytest.mark.critical_path
     def test_get_company_by_id_without_auth(self, get_test_name, get_latest_company_id_from_first_page):
         response = self.request.get(
             url=f"{self.url.list_of_companies}/{get_latest_company_id_from_first_page}"
         )
-        # print(response.text)
         self.assertions.assert_status_code(
             response=response,
             expected_status_code=HTTPStatus.BAD_REQUEST,
@@ -101,6 +105,7 @@ class TestGetCompanyById:
 
     @allure.title("Get company by id with extra params")
     @allure.severity(allure.severity_level.NORMAL)
+    @pytest.mark.extended
     def test_get_company_by_id_with_extra_params(
         self,
         get_test_name,
@@ -121,10 +126,8 @@ class TestGetCompanyById:
     # PERMISSIONS AND ROLES
 
     @allure.title("Check permissions for manual creation of system entities (without external_id) by roles")
-    @allure.link(
-        "https://bsldev.atlassian.net/wiki/spaces/CLOGISTIC/pages/2335309828",
-        name="Роли и доступ",
-    )
+    @allure.severity(allure.severity_level.CRITICAL)
+    @pytest.mark.critical_path
     @pytest.mark.parametrize("role, expected_status", [
         ("ADMIN", HTTPStatus.OK), # Ожидаем, что админ SAAS может просматривать компанию
         ("LOGISTICIAN", HTTPStatus.FORBIDDEN), # Ожидаем, что логист SAAS НЕ может просматривать компанию
@@ -136,10 +139,9 @@ class TestGetCompanyById:
             headers = request.getfixturevalue("logistician_saas_auth_headers")
 
         response = self.request.get(
-            url=f"{self.url.list_of_companies}/ac6d1196-3488-49b0-b670-8361bca1d8d6",
+            url=f"{self.url.list_of_companies}/{settings.COURIER_COMPANY_ID}",
             headers=headers,
         )
-        # print(response.text)
         self.assertions.assert_status_code(
             response=response,
             expected_status_code=expected_status,

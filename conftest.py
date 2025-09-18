@@ -54,14 +54,10 @@ def courier_iiko_auth_headers(auth_headers, request):
         courier_id = request.param
         admin_headers = auth_headers(Role.ADMIN)
 
-        # Получаем телефон курьера
         phone = AuthService.get_courier_phone(courier_id, admin_headers)
-        # Запрашиваем SMS код
         AuthService.request_sms_code(phone)
-        # Получаем SMS код через админский эндпоинт
         sms_code = AuthService.get_sms_code_for_courier(courier_id, admin_headers)
 
-        # Авторизуемся как курьер
         response = httpx.post(
             f"{settings.BASE_URL}/login/phone/code",
             json={"phone": phone, "code": sms_code}
@@ -70,21 +66,10 @@ def courier_iiko_auth_headers(auth_headers, request):
             raise Exception(f"Courier auth failed: {response.text}")
         return {"Authorization": f"Bearer {response.json()['access_token']}"}
 
-    # # Иначе используем стандартного тестового курьера
-    # return auth_headers(Role.COURIER_IIKO)
-
 @pytest.fixture
 def logistician_iiko_auth_headers(auth_headers):
     """Фикстура для получения headers логиста iiko."""
     return auth_headers(Role.LOGISTICIAN_IIKO)
-
-@pytest.fixture(scope="class")
-def courier_data():
-    """Данные компании и ПВ курьера для E2E теста."""
-    return {
-        "company_id": "ac6d1196-3488-49b0-b670-8361bca1d8d6", # BSL
-        "pickup_point_id": "9f8896d7-3f85-4d8c-9d6e-e0b9c672cf9a", # ПВ в Минске
-    }
 
 @pytest.fixture
 def timer(request):

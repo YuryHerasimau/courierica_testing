@@ -5,3 +5,4 @@ pydantic-settings==2.6.0
 allure-pytest==2.13.5
 python-dotenv==1.0.1
 Faker==28.4.1
+redis==6.4.0

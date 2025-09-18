@@ -1,26 +1,25 @@
-import time
 import allure
 import pytest
-import json
-
+import time
 from datetime import datetime, timedelta
+
 from data import get_iiko_endpoints
 from services.auth_service import AuthService
+from services.iiko_delivery_service import IikoDeliveryService
+from services.courier_service import CourierService
 from src.http_methods import MyRequests
 from src.assertions import Assertions
 from src.prepare_data.prepare_iiko_delivery_data import PrepareIikoDeliveryData
-from http import HTTPStatus
 from generator.iiko_delivery_generator import IikoDeliveryGenerator
-from functions import load_json
-from services.courier_service import CourierService
-from settings import settings
 from tests.e2e.utils.dispatch_calc import DeliveryTimeCalculator
+from functions import load_json
 
 
-@allure.epic(
-    "Testing dispatch v.2.0"
-)
+@allure.epic("Testing dispatch v.2.0")
+@pytest.mark.dispatch_v2
 class TestDispatchIIKO:
+    delivery_service = IikoDeliveryService()
+    
     request = MyRequests()
     iiko_url = get_iiko_endpoints()
     assertions = Assertions()
@@ -31,195 +30,6 @@ class TestDispatchIIKO:
     ADDRESS_DATA = load_json("tests/e2e/config/iiko_address_data.json")
     pickup_point = ADDRESS_DATA["ПВ Курьерика"]
     
-    def _wait_for_order_status(self, headers, organization_id, correlation_id, timeout=60):
-        """Ожидание успешного статуса заказа с таймаутом"""
-        start_time = time.time()
-        while time.time() - start_time < timeout:
-            status_response = self.request.post(
-                url=self.iiko_url.check_status,
-                data=json.dumps({
-                    "organizationId": organization_id,
-                    "correlationId": correlation_id
-                }),
-                headers=headers
-            )
-            print(status_response.json())
-
-            status = status_response.json().get("state")
-            if status == "Success":
-                return True
-            elif status == "Error":
-                raise AssertionError("Failed to change order.")
-            
-            time.sleep(3)
-        
-        raise AssertionError(f"Order status check timeout. Last status: {status}")
-
-    def create_order(self, address_key, duration=60, iiko_headers=None, test_name=None):
-        if iiko_headers is None:
-            iiko_headers = self.iiko_headers
-        if test_name is None:
-            test_name = self._testMethodName
-        
-        address_info = self.ADDRESS_DATA[address_key]
-        
-        info = next(self.iiko_delivery_generator.generate_iiko_order(
-            organizationId=settings.IIKO_ORGANIZATION_ID,
-            delivery_duration=duration,
-            delivery_point={
-                "coordinates": {
-                    "latitude": address_info["latitude"],
-                    "longitude": address_info["longitude"]
-                },
-                "address": {
-                    "type": "city",
-                    "line1": address_info["line1"]
-                }
-            }
-        ))
-        
-        data = self.iiko_delivery_data.prepare_iiko_delivery_data(info=info)
-        response = self.request.post(url=self.iiko_url.create_order, data=data, headers=iiko_headers)
-        self.assertions.assert_status_code(response, HTTPStatus.OK, test_name)
-
-        order_id = response.json()["orderInfo"]["id"]
-        correlation_id = response.json()["correlationId"]
-        print(f"Created order_id is {order_id}, correlation_id is {correlation_id}")
-        self._wait_for_order_status(iiko_headers, settings.IIKO_ORGANIZATION_ID, correlation_id)
-
-        return order_id
-    
-    def cancel_order(self, order_id, iiko_headers, test_name=None):
-        if test_name is None:
-            test_name = self._testMethodName
-
-        cancel_response = self.request.post(
-            url=self.iiko_url.cancel_order,
-            data=json.dumps({
-                "organizationId": settings.IIKO_ORGANIZATION_ID,
-                "orderId": order_id
-            }),
-            headers=iiko_headers    
-        )
-        self.assertions.assert_status_code(cancel_response, HTTPStatus.OK, test_name)
-        self._wait_for_order_status(iiko_headers, settings.IIKO_ORGANIZATION_ID, cancel_response.json()["correlationId"])
-
-    def deliver_order(self, order_id, iiko_headers, test_name=None):
-        if test_name is None:
-            test_name = self._testMethodName
-
-        deliver_response = self.request.post(
-            url=self.iiko_url.deliver_order,
-            data=json.dumps({
-                "organizationId": settings.IIKO_ORGANIZATION_ID,
-                "orderId": order_id,
-                "deliveryStatus": "Delivered"
-            }),
-            headers=iiko_headers    
-        )
-        self.assertions.assert_status_code(deliver_response, HTTPStatus.OK, test_name)
-        self._wait_for_order_status(iiko_headers, settings.IIKO_ORGANIZATION_ID, deliver_response.json()["correlationId"])
-
-    def close_order(self, order_id, iiko_headers, test_name=None):
-        if test_name is None:
-            test_name = self._testMethodName
-
-        close_response = self.request.post(
-            url=self.iiko_url.close_order,
-            data=json.dumps({
-                "organizationId": settings.IIKO_ORGANIZATION_ID,
-                "orderId": order_id
-            }),
-            headers=iiko_headers
-        )
-        self.assertions.assert_status_code(close_response, HTTPStatus.OK, test_name)
-        self._wait_for_order_status(iiko_headers, settings.IIKO_ORGANIZATION_ID, close_response.json()["correlationId"])
-
-    def _cancel_and_close_all_orders(self, iiko_headers, test_name=None):
-        if test_name is None:
-            test_name = self._testMethodName
-
-        current_date = datetime.now().date()
-
-        status_cancel = [
-            "Unconfirmed",
-            "WaitCooking",
-            "ReadyForCooking",
-            "CookingStarted",
-            "CookingCompleted",
-            "Waiting"
-            ]
-        status_delivered = 'OnWay'
-        status_closed = 'Delivered'
-
-        # Получаем все заказы за текущий день
-        response = self.request.post(
-            url=self.iiko_url.list_of_orders_by_statuses_and_dates,
-            data=json.dumps({
-                "organizationIds": [settings.IIKO_ORGANIZATION_ID],
-                "deliveryDateFrom": f"{current_date}T00:00:00",
-                "status": []
-            }),
-            headers=iiko_headers
-        )
-        self.assertions.assert_status_code(response, HTTPStatus.OK, test_name)
-
-        data = response.json()
-        if not data.get('ordersByOrganizations'):
-            print('Нет заказов для отмены или закрытия')
-            return
-        
-        data_order_cancel = []
-        data_order_deliv = []
-        data_order_closed = []
-
-        for order in data['ordersByOrganizations'][0]['orders']:
-            if order['creationStatus'] == 'Success':
-                if order['order']['status'] in status_cancel:
-                    data_order_cancel.append(order['id'])
-                elif order['order']['status'] == status_delivered:
-                    data_order_deliv.append(order['id'])
-                elif order['order']['status'] == status_closed:
-                    data_order_closed.append(order['id'])
-
-        print(f'Заказы для отмены: {data_order_cancel}')
-        print(f'Заказы для доставки: {data_order_deliv}')
-        print(f'Заказы для закрытия: {data_order_closed}')
-
-        # Обрабатываем заказы для отмены
-        if data_order_cancel:
-            for order_id in data_order_cancel:
-                try:
-                    self.cancel_order(order_id, iiko_headers, test_name)
-                    print(f'Заказ - {order_id} - успешно отменен')
-                except Exception as e:
-                    print(f'Ошибка отмены заказа {order_id}: {str(e)}')
-        else:
-            print('Нет заказов для отмены')
-
-        # Обрабатываем заказы для доставки
-        if data_order_deliv:
-            for order_id in data_order_deliv:
-                try:
-                    self.deliver_order(order_id, iiko_headers, test_name)
-                    data_order_closed.append(order_id)
-                    print(f'Статус заказа - {order_id} - успешно изменен на Delivered')
-                except Exception as e:
-                    print(f'Ошибка изменения статуса заказа {order_id}: {str(e)}')
-        else:
-            print('Нет заказов для изменения статуса')
-
-        # Обрабатываем заказы для закрытия
-        if data_order_closed:
-            for order_id in data_order_closed:
-                try:
-                    self.close_order(order_id, iiko_headers, test_name)
-                    print(f'Заказ - {order_id} - успешно закрыт')
-                except Exception as e:
-                    print(f'Ошибка закрытия заказа {order_id}: {str(e)}')
-        else:
-            print('Нет заказов для закрытия')
-    
     def _setup_required_couriers(self, get_test_name, admin_auth_headers, courier_iiko_data, courier_names=None):
         """Фикстура для настройки только указанных курьеров перед тестами."""
         if courier_names is None:
@@ -229,7 +39,7 @@ class TestDispatchIIKO:
         for courier_name in courier_names:
             courier_id = courier_iiko_data["couriers"][courier_name]
             # Авторизуемся под курьером
-            courier_headers = AuthService.get_courier_headers(courier_id=courier_id, admin_headers=admin_auth_headers)
+            courier_headers = AuthService.get_courier_headers(courier_id, admin_auth_headers)
 
             # Открываем смену
             self.courier_service.turn_on_shift(
@@ -248,12 +58,8 @@ class TestDispatchIIKO:
                 courier_headers
             )
 
-    @allure.title("Тест отмена и закрытие всех заказов за сегодняшним день")
-    def test_cancel_and_close_all_orders(self, get_test_name, iiko_headers):
-        self._cancel_and_close_all_orders(iiko_headers, get_test_name)
-
     @allure.title("2 - Перебэтч	- Новый заказ проходит по критериям только в один из незахлопнутых бэтчей")
-    @allure.severity(allure.severity_level.BLOCKER)
+    @allure.severity(allure.severity_level.CRITICAL)
     def test_order_rebatch_to_specific_batch(self, get_test_name, iiko_headers, admin_auth_headers, courier_iiko_data):
         """
         1. Создаем первый батч (ближние адреса)
@@ -261,27 +67,21 @@ class TestDispatchIIKO:
         3. Создаем новый готовящийся заказ с ближним адресом
         4. Проверяем что готовящийся заказ объединился с ближними заказами (перешел в первый батч)
         """
-        # Настраиваем только нужных курьеров
-        # self._setup_required_couriers(
-        #     get_test_name,
-        #     admin_auth_headers,
-        #     courier_iiko_data,
-        #     courier_names=["Семен", "Федор"]
-        # )
+        # Настраиваем только нужных курьеров ["Семен", "Федор"]
         # 1. Создаем первый батч
         batch_1_orders = [
-            self.create_order("Башиловская 22", duration=30, iiko_headers=iiko_headers, test_name=get_test_name),
-            self.create_order("Башиловская 22", duration=45, iiko_headers=iiko_headers, test_name=get_test_name)
+            self.delivery_service.create_order("Башиловская 22", 30, iiko_headers),
+            self.delivery_service.create_order("Башиловская 22", 45, iiko_headers)
         ]
 
         # 2. Создаем второй батч
         batch_2_orders = [
-            self.create_order("Сущёвский Вал 55", duration=60, iiko_headers=iiko_headers, test_name=get_test_name),
-            self.create_order("Сущёвский Вал 55", duration=90, iiko_headers=iiko_headers, test_name=get_test_name)
+            self.delivery_service.create_order("Сущёвский Вал 55", 60, iiko_headers),
+            self.delivery_service.create_order("Сущёвский Вал 55", 90, iiko_headers)
         ]
 
         # 3. Создаем тестовый заказ, который должен попасть в 1й батч по критериям батчинга
-        test_order = self.create_order("Хуторская 38Ас23", duration=100, iiko_headers=iiko_headers, test_name=get_test_name)
+        test_order = self.delivery_service.create_order("Хуторская 38Ас23", 100, iiko_headers)
         print("order_for_batch_1", test_order)
         time.sleep(90) # Ждем устаканивания перебэтча
 
@@ -295,7 +95,7 @@ class TestDispatchIIKO:
         target_batch, other_batch = None, None
 
         for courier_name, courier_id in couriers.items():
-            courier_headers = AuthService.get_courier_headers(courier_id=courier_id, admin_headers=admin_auth_headers)
+            courier_headers = AuthService.get_courier_headers(courier_id, admin_auth_headers)
             batch_info = self.courier_service.get_courier_batch_deliveries(get_test_name, courier_headers)
 
             if not batch_info.get('deliveries'):
@@ -345,7 +145,7 @@ class TestDispatchIIKO:
             )
        
     @allure.title("5 - Перебэтч	- Нет времени ждать (заказ переходит в другой существующий батч)")
-    @allure.severity(allure.severity_level.BLOCKER)
+    @allure.severity(allure.severity_level.CRITICAL)
     def test_no_time_to_wait_rebatch_to_existing(self, get_test_name, iiko_headers):
         """
         1. Создаем первый батч с готовящимся заказом                                # 09, 10, 11(+) ---> 11(+)
@@ -355,14 +155,14 @@ class TestDispatchIIKO:
         """
         # 1. Создаем первый батч с готовящимся заказом
         first_batch = [
-            self.create_order("Ямская 10", duration=15, iiko_headers=iiko_headers, test_name=get_test_name), # READY
-            self.create_order("Ямская 10", duration=60, iiko_headers=iiko_headers, test_name=get_test_name),
-            self.create_order("Сущёвский Вал 55", duration=30, iiko_headers=iiko_headers, test_name=get_test_name),
+            self.delivery_service.create_order("Ямская 10", 15, iiko_headers), # READY
+            self.delivery_service.create_order("Ямская 10", 60, iiko_headers),
+            self.delivery_service.create_order("Сущёвский Вал 55", 30, iiko_headers),
         ]
         
         # 2. Создаем второй батч (любой)
         other_batch = [
-            self.create_order("Сущёвский Вал 55", duration=15, iiko_headers=iiko_headers, test_name=get_test_name), # 15 вместо 45
+            self.delivery_service.create_order("Сущёвский Вал 55", 15, iiko_headers), # 15 вместо 45
         ]
 
         # 3.1. Назначаем 1 готовый заказ из первого батча на курьера (в терминале)
@@ -371,7 +171,6 @@ class TestDispatchIIKO:
         # self._simulate_no_time_to_wait(preparing_order)
 
         # 5. Проверки батчинга
-        # ... (реализация проверок)
         # ... ("Исходный батч должен быть захлопнут")
         # ... ("Заказ должен быть в батче с Сущёвский Вал")
         # ... ("Курьер должен получить push-уведомление")
@@ -387,8 +186,8 @@ class TestDispatchIIKO:
         """
         # 1. Создаем батч с готовящимся заказом
         batch = [
-            self.create_order("Башиловская 22", duration=15, iiko_headers=iiko_headers, test_name=get_test_name), # READY
-            self.create_order("Башиловская 22", duration=40, iiko_headers=iiko_headers, test_name=get_test_name)
+            self.delivery_service.create_order("Башиловская 22", 15, iiko_headers), # READY
+            self.delivery_service.create_order("Башиловская 22", 40, iiko_headers)
         ]
         
         # 2. Добавляем второго курьера
@@ -412,21 +211,15 @@ class TestDispatchIIKO:
         2. Имитируем ситуацию "нет времени ждать" без доступных курьеров
         3. Проверяем вызов 3PL
         """
-        # Настраиваем только нужных курьеров
-        # self._setup_required_couriers(
-        #     get_test_name,
-        #     admin_auth_headers,
-        #     courier_iiko_data,
-        #     courier_names=["Семен", "Федор", "3PL"],
-        # )
+        # Настраиваем только нужных курьеров ["Семен", "Федор", "3PL"]
 
         # 1. Создаем батч с готовящимся заказом
         test_duration_1 = 30
         test_duration_2 = 15
 
         batch = [
-            self.create_order("Башиловская 22", duration=test_duration_1, iiko_headers=iiko_headers, test_name=get_test_name), # 
-            self.create_order("Башиловская 22", duration=test_duration_2, iiko_headers=iiko_headers, test_name=get_test_name), # READY
+            self.delivery_service.create_order("Башиловская 22", test_duration_1, iiko_headers), # 
+            self.delivery_service.create_order("Башиловская 22", test_duration_2, iiko_headers), # READY
         ]
 
         ROUTE_TIME = 12 # Планируемое время из маршрута - 34 мин, по ЯКарте - 12...13 мин на авто
@@ -467,33 +260,21 @@ class TestDispatchIIKO:
         2. Выключаем смены курьерам
         """
         # 1. Создаем первый заказ
-        first_order = self.create_order("Башиловская 22", duration=30, iiko_headers=iiko_headers, test_name=get_test_name)
+        first_order = self.delivery_service.create_order("Башиловская 22", 30, iiko_headers)
 
-        # 2. Открываем смену и патчим геоточку для Семен
-        self._setup_required_couriers(
-            get_test_name,
-            admin_auth_headers,
-            courier_iiko_data,
-            courier_names=["Семен"]
-        )
+        # 2. Открываем смену и патчим геоточку для ["Семен"]
         time.sleep(15)
 
         # 3. Проверяем батч курьера Семен
         # ... (1 заказ должен попасть в батч Семену)
 
         # 4. Создаем второй заказ недалеко от первого
-        second_order = self.create_order("Хуторская 38Ас23", duration=40, iiko_headers=iiko_headers, test_name=get_test_name)
+        second_order = self.delivery_service.create_order("Хуторская 38Ас23", 40, iiko_headers)
         time.sleep(15)
         
         # Проверяем батч? (оба у Семена)
 
-        # 5. Открываем смену и патчим геоточку для Федор
-        self._setup_required_couriers(
-            get_test_name,
-            admin_auth_headers,
-            courier_iiko_data,
-            courier_names=["Федор"]
-        )
+        # 5. Открываем смену и патчим геоточку для ["Федор"]
         time.sleep(90)
 
         # 6. Проверяем батч курьеров Семен и Федор
@@ -527,26 +308,20 @@ class TestDispatchIIKO:
            - Отмененный заказ исчез из мобильного приложения курьера
         """
         # !!!!!!!!!!!! Отключить 3PL и убрать его со смены
-
-        self._setup_required_couriers(
-            get_test_name,
-            admin_auth_headers,
-            courier_iiko_data,
-            courier_names=["Семен", "Федор"]
-        )
+        # Настраиваем только нужных курьеров ["Семен", "Федор"]
 
         # 1. Создаем батч
         ready_orders = [
-            self.create_order("Башиловская 22", 30, iiko_headers, get_test_name), # READY
-            self.create_order("Башиловская 22", 45, iiko_headers, get_test_name) # READY
+            self.delivery_service.create_order("Башиловская 22", 30, iiko_headers), # READY
+            self.delivery_service.create_order("Башиловская 22", 45, iiko_headers) # READY
         ]
-        preparing_order = self.create_order("Хуторская 38Ас23", 100, iiko_headers, get_test_name)
+        preparing_order = self.delivery_service.create_order("Хуторская 38Ас23", 100, iiko_headers)
         
         # Назначаем 2 готовых заказа на курьера (в терминале)
         time.sleep(90)
 
         # 2. Отменяем готовящийся заказ
-        self.cancel_order(preparing_order, iiko_headers, get_test_name)
+        self.delivery_service.cancel_order(preparing_order[0], iiko_headers)
 
     @allure.title("12 - Перебэтч - Отмена заказа с перераспределением (готовящийся заказ)")
     @allure.severity(allure.severity_level.CRITICAL)
@@ -568,13 +343,13 @@ class TestDispatchIIKO:
 
         # 1. Создаем батчи
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 60, iiko_headers, get_test_name), # READY
-            self.create_order("Сущёвский Вал 55", 30, iiko_headers, get_test_name), # -> CANCEL
-            self.create_order("Ямская 10", 45, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Сущёвский Вал 55", 60, iiko_headers), # READY
+            self.delivery_service.create_order("Сущёвский Вал 55", 30, iiko_headers), # -> CANCEL
+            self.delivery_service.create_order("Ямская 10", 45, iiko_headers),
         ]
         
         second_batch = [
-            self.create_order("Сущёвский Вал 55", 160, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Сущёвский Вал 55", 160, iiko_headers),
         ]
 
         # Назначаем 1 готовый заказ из батча 1 на курьера (в терминале)
@@ -582,7 +357,7 @@ class TestDispatchIIKO:
         time.sleep(120)
 
         # 2. Отменяем готовящийся заказ из батча 1
-        self.cancel_order(first_batch[1], iiko_headers, get_test_name)
+        self.delivery_service.cancel_order(first_batch[1][0], iiko_headers)
         
         # 3. Проверки
         # Забирается заказ из другого бэтча и кладется в этот бэтч, в котором произошла отмена, так как по кол-ву заказов в бэтче,
@@ -597,65 +372,65 @@ class TestDispatchIIKO:
         """
         # 1. Создаем батчи
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 60, iiko_headers, get_test_name), # READY
-            self.create_order("Сущёвский Вал 55", 30, iiko_headers, get_test_name), # READY
-            self.create_order("Ямская 10", 45, iiko_headers, get_test_name), # -> CANCEL
+            self.delivery_service.create_order("Сущёвский Вал 55", 60, iiko_headers), # READY
+            self.delivery_service.create_order("Сущёвский Вал 55", 30, iiko_headers), # READY
+            self.delivery_service.create_order("Ямская 10", 45, iiko_headers), # -> CANCEL
         ]
         
         second_batch = [
-            self.create_order("Сущёвский Вал 55", 160, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Сущёвский Вал 55", 160, iiko_headers),
         ]
 
         # Назначаем 1 готовый заказ из батча 1 на курьера (в терминале)
-        # self.assign_order(first_batch[0], iiko_headers, get_test_name)
+        # self.assign_order(first_batch[0], iiko_headers)
         time.sleep(90)
 
         # 2. Отменяем готовящийся заказ из батча 1
         # (ВРУЧНУЮ ОТМЕНЯЕМ ИМЕННО ГОТОВЯЩИЙСЯ ЗАКАЗ ИЗ БАТЧА 1)
-        # self.cancel_order(first_batch[1], iiko_headers, get_test_name)
+        # self.delivery_service.cancel_order(first_batch[1][0], iiko_headers)
 
     @allure.title("13 - Перебэтч - Отмена заказа в незахлопнутом бэтче и нужно перераспределить заказы")
     @allure.severity(allure.severity_level.CRITICAL)
     def test_cancel_preparing_order_with_rebatch_2(self, get_test_name, iiko_headers):
         # 1. Создаем батчи
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 60, iiko_headers, get_test_name), 
-            self.create_order("Сущёвский Вал 55", 30, iiko_headers, get_test_name), # READY -> CANCEL
-            self.create_order("Ямская 10", 45, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Сущёвский Вал 55", 60, iiko_headers), 
+            self.delivery_service.create_order("Сущёвский Вал 55", 30, iiko_headers), # READY -> CANCEL
+            self.delivery_service.create_order("Ямская 10", 45, iiko_headers),
         ]
         
         second_batch = [
-            self.create_order("Ямская 10", 150, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Ямская 10", 150, iiko_headers),
         ]
 
         # Назначаем 1 готовый заказ из батча 1 на курьера (в терминале)
-        # self.assign_order(first_batch[1], iiko_headers, get_test_name)
+        # self.assign_order(first_batch[1], iiko_headers)
         time.sleep(90)
 
         # 2. Отменяем ГОТОВЫЙ заказ из батча 1
         # (ВРУЧНУЮ ОТМЕНЯЕМ ИМЕННО ГОТОВЫЙ ЗАКАЗ ИЗ БАТЧА 1)
-        # self.cancel_order(first_batch[1], iiko_headers, get_test_name)
+        # self.delivery_service.cancel_order(first_batch[1][0], iiko_headers)
 
     @allure.title("14 - Перебэтч - Отмена заказа в незахлопнутом бэтче и НЕ нужно перераспределять заказы")
     @allure.severity(allure.severity_level.CRITICAL)
     def test_cancel_preparing_order_without_rebatch_1(self, get_test_name, iiko_headers):
 
-        # Устанавливаем максимальное количество заказов в руки = 4 !!!!!!!
+        # Устанавливаем на ПВ default_max_deliveries_for_courier=4
         # Перемотреть тестовые данные, чтобы пачка заказов была в одном месте, а у другого курьера - в другом месте пачка
 
         # 1. Создаем батчи
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 60, iiko_headers, get_test_name), # READY
-            self.create_order("Сущёвский Вал 55", 30, iiko_headers, get_test_name), # READY
-            self.create_order("Ямская 10", 45, iiko_headers, get_test_name), # -> CANCEL
-            self.create_order("Ямская 10", 150, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Сущёвский Вал 55", 60, iiko_headers), # READY
+            self.delivery_service.create_order("Сущёвский Вал 55", 30, iiko_headers), # READY
+            self.delivery_service.create_order("Ямская 10", 45, iiko_headers), # -> CANCEL
+            self.delivery_service.create_order("Ямская 10", 150, iiko_headers),
         ]
 
         time.sleep(30)
 
         second_batch = [
-            self.create_order("Больничный переулок, 2", 60, iiko_headers, get_test_name),
-            self.create_order("Больничный переулок, 2", 70, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Больничный переулок, 2", 60, iiko_headers),
+            self.delivery_service.create_order("Больничный переулок, 2", 70, iiko_headers),
         ]
 
         # Готовим 2 заказа из батча 1 (происходит назначение их на курьера)
@@ -663,7 +438,7 @@ class TestDispatchIIKO:
 
 
         # 2. Отменяем 1 готовящийся заказ из батча 1
-        self.cancel_order(first_batch[2], iiko_headers, get_test_name)
+        self.delivery_service.cancel_order(first_batch[2][0], iiko_headers)
 
         # 3. Проверка
         # Продолжается ожидание приготовления последнего готовящегося заказа в этом бэтче.
@@ -673,28 +448,28 @@ class TestDispatchIIKO:
     def test_cancel_preparing_order_without_rebatch_2(self, get_test_name, iiko_headers):
         """перераспределить заказы эффективнее, чем есть сейчас, нельзя."""
 
-        # Устанавливаем максимальное количество заказов в руки = 4 !!!!!!!
+        # Устанавливаем на ПВ default_max_deliveries_for_courier=4
         # Перемотреть тестовые данные, чтобы пачка заказов была в одном месте, а у другого курьера - в другом месте пачка
 
         # 1. Создаем батчи
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 60, iiko_headers, get_test_name), # READY
-            self.create_order("Сущёвский Вал 55", 30, iiko_headers, get_test_name), # READY
-            self.create_order("Ямская 10", 45, iiko_headers, get_test_name), # -> CANCEL
+            self.delivery_service.create_order("Сущёвский Вал 55", 60, iiko_headers), # READY
+            self.delivery_service.create_order("Сущёвский Вал 55", 30, iiko_headers), # READY
+            self.delivery_service.create_order("Ямская 10", 45, iiko_headers), # -> CANCEL
         ]
 
         time.sleep(30)
         
         second_batch = [
-            self.create_order("Больничный переулок, 2", 60, iiko_headers, get_test_name),
-            self.create_order("Больничный переулок, 2", 70, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Больничный переулок, 2", 60, iiko_headers),
+            self.delivery_service.create_order("Больничный переулок, 2", 70, iiko_headers),
         ]
 
         # Готовим 2 заказа из батча 1 (происходит назначение их на курьера)
         time.sleep(30)
 
         # 2. Отменяем готовящийся заказ из батча 1
-        self.cancel_order(first_batch[2], iiko_headers, get_test_name)
+        self.delivery_service.cancel_order(first_batch[2][0], iiko_headers)
         
         # По итогу перебэтча оказывается, что перераспределять заказы в этот бэтч из других бэтчей нет смысла
         # (не проходят по критериям или неэффективно по ранжированию), и этот бэтч (в котором отменился заказ) захлопывается,
@@ -704,29 +479,29 @@ class TestDispatchIIKO:
     @allure.severity(allure.severity_level.CRITICAL)
     def test_cancel_preparing_order_without_rebatch_3(self, get_test_name, iiko_headers):
 
-        # Устанавливаем максимальное количество заказов в руки = 4 !!!!!!!
+        # Устанавливаем на ПВ default_max_deliveries_for_courier=4
         # Перемотреть тестовые данные, чтобы пачка заказов была в одном месте, а у другого курьера - в другом месте пачка
 
         # 1. Создаем батчи
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 60, iiko_headers, get_test_name), 
-            self.create_order("Сущёвский Вал 55", 30, iiko_headers, get_test_name), # READY -> CANCEL
-            self.create_order("Ямская 10", 45, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Сущёвский Вал 55", 60, iiko_headers), 
+            self.delivery_service.create_order("Сущёвский Вал 55", 30, iiko_headers), # READY -> CANCEL
+            self.delivery_service.create_order("Ямская 10", 45, iiko_headers),
         ]
         
         time.sleep(30)
         
         second_batch = [
-            self.create_order("Больничный переулок, 2", 60, iiko_headers, get_test_name),
-            self.create_order("Больничный переулок, 2", 70, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Больничный переулок, 2", 60, iiko_headers),
+            self.delivery_service.create_order("Больничный переулок, 2", 70, iiko_headers),
         ]
 
         # Готовим заказ из батча 1 (происходит назначение на курьера)
-        # self.assign_order(first_batch[1], iiko_headers, get_test_name)
+        # self.assign_order(first_batch[1], iiko_headers)
         time.sleep(30)
 
         # 2. Отменяем ГОТОВЫЙ заказ из батча 1
-        self.cancel_order(first_batch[1], iiko_headers, get_test_name)
+        self.delivery_service.cancel_order(first_batch[1][0], iiko_headers)
 
         # 3. Проверка
         # По итогу перебэтча оказывается, что перераспределять заказы в этот бэтч из других бэтчей нет смысла
@@ -738,16 +513,16 @@ class TestDispatchIIKO:
     def test_cancel_order_in_closed_batch(self, get_test_name, iiko_headers):
         # 1. Создаем батч
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 60, iiko_headers, get_test_name), # READY
-            self.create_order("Сущёвский Вал 55", 30, iiko_headers, get_test_name), # READY
+            self.delivery_service.create_order("Сущёвский Вал 55", 60, iiko_headers), # READY
+            self.delivery_service.create_order("Сущёвский Вал 55", 30, iiko_headers), # READY
         ]
 
         # Готовим 2 заказа из батча 1 (происходит назначение на курьера)
-        # self.assign_order(first_batch[1], iiko_headers, get_test_name)
+        # self.assign_order(first_batch[1], iiko_headers)
         time.sleep(90)
 
         # 2. Отменяется один из заказов
-        self.cancel_order(first_batch[1], iiko_headers, get_test_name)
+        self.delivery_service.cancel_order(first_batch[1][0], iiko_headers)
 
     @allure.title(
         "18 - Перебэтч - Параметры <Время приготовления заказа>,"
@@ -756,19 +531,19 @@ class TestDispatchIIKO:
     )
     @allure.severity(allure.severity_level.CRITICAL)
     def test_new_order_exceeds_max_delivery_time_triggers_3pl(self, get_test_name, iiko_headers):
-        # Устанавливаем максимальное количество заказов в руки = 3 !!!!!!!
+        # Устанавливаем на ПВ default_max_deliveries_for_courier=3
 
         # 1. Создаем батчи
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 80, iiko_headers, get_test_name), # чтоб не ждать 1 ч до вызова 3PL - подобрать меньшие таймтил
-            self.create_order("Ямская 10", 60, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Сущёвский Вал 55", 80, iiko_headers), # чтоб не ждать 1 ч до вызова 3PL - подобрать меньшие таймтил
+            self.delivery_service.create_order("Ямская 10", 60, iiko_headers),
         ]
 
         time.sleep(30)
 
         # при time_till >= 13 (или 15?) минут - все 3 заказа будут в батче у курьера
         third_order_for_first_batch = [
-            self.create_order("Октябрьская 105", 12, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Октябрьская 105", 12, iiko_headers),
         ]
 
         # 2. Нажимаем "Забрал" в мобилке на 2-х готовых заказах
@@ -779,23 +554,23 @@ class TestDispatchIIKO:
     )
     @allure.severity(allure.severity_level.CRITICAL)
     def test_batch_priority_by_orders_count(self, get_test_name, iiko_headers):
-        # Устанавливаем максимальное количество заказов в руки = 3 !!!!!!!
+        # Устанавливаем на ПВ default_max_deliveries_for_courier=3
         # TPH у курьеров должен быть одинаков
 
         # 1. Создаем батчи
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 60, iiko_headers, get_test_name),
-            self.create_order("Сущёвский Вал 55", 30, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Сущёвский Вал 55", 60, iiko_headers),
+            self.delivery_service.create_order("Сущёвский Вал 55", 30, iiko_headers),
         ]
 
         second_batch = [
-            self.create_order("Анненская 2", 45, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Анненская 2", 45, iiko_headers),
         ]
 
         time.sleep(15)
 
         # 2. Появляется новый готовящийся заказ
-        new_order = self.create_order("Анненская 17", 60, iiko_headers, get_test_name)
+        new_order = self.delivery_service.create_order("Анненская 17", 60, iiko_headers)
 
         # 3. Проверка
         # Заказ попадает в бэтч с меньшем кол-во заказов (согласно логике ранжирования).
@@ -806,26 +581,26 @@ class TestDispatchIIKO:
     )
     @allure.severity(allure.severity_level.CRITICAL)
     def test_batch_priority_by_avg_route_length(self, get_test_name, iiko_headers):
-        # Устанавливаем максимальное количество заказов в руки = 3 !!!!!!!
+        # Устанавливаем на ПВ default_max_deliveries_for_courier=3
 
         # TPH: у Семена - 6 заказа (TPH:1.601586006331217)
         # TPH: у Федора - 9 заказов (TPH:2.133116374014157)
 
         # 1. Создаем батчи
         first_batch = [
-            self.create_order("Марьиной Рощи 9", 60, iiko_headers, get_test_name),
-            self.create_order("Марьиной Рощи 9", 30, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Марьиной Рощи 9", 60, iiko_headers),
+            self.delivery_service.create_order("Марьиной Рощи 9", 30, iiko_headers),
         ]
 
         second_batch = [
-            self.create_order("Анненская 17", 60, iiko_headers, get_test_name),
-            self.create_order("Анненская 17", 45, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Анненская 17", 60, iiko_headers),
+            self.delivery_service.create_order("Анненская 17", 45, iiko_headers),
         ]
 
         time.sleep(15)
 
         # 2. Появляется новый готовящийся заказ
-        new_order = self.create_order("Анненская 2", 60, iiko_headers, get_test_name)
+        new_order = self.delivery_service.create_order("Анненская 2", 60, iiko_headers)
 
         # Логи (факт):
         # courierID=aaefc2fb-57fa-486a-ae23-fdd559207e47
@@ -856,26 +631,26 @@ class TestDispatchIIKO:
     )
     @allure.severity(allure.severity_level.CRITICAL)
     def test_batch_priority_by_tph(self, get_test_name, iiko_headers):
-        # Устанавливаем максимальное количество заказов в руки = 3 !!!!!!!
+        # Устанавливаем на ПВ default_max_deliveries_for_courier=3
 
         # TPH: у Семена - 9 заказа (TPH:2.1413962696439914)
         # TPH: у Федора - 11 заказа (TPH:2.139832609049052)
 
         # 1. Создаем батчи
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 60, iiko_headers, get_test_name),
-            self.create_order("Сущёвский Вал 55", 30, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Сущёвский Вал 55", 60, iiko_headers),
+            self.delivery_service.create_order("Сущёвский Вал 55", 30, iiko_headers),
         ]
 
         second_batch = [
-            self.create_order("Анненская 17", 60, iiko_headers, get_test_name),
-            self.create_order("Анненская 17", 45, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Анненская 17", 60, iiko_headers),
+            self.delivery_service.create_order("Анненская 17", 45, iiko_headers),
         ]
 
         time.sleep(15)
 
         # 2. Появляется новый готовящийся заказ
-        new_order = self.create_order("Веткина 2Ас7", 60, iiko_headers, get_test_name)
+        new_order = self.delivery_service.create_order("Веткина 2Ас7", 60, iiko_headers)
 
         # Логи:
         # avg distance second=
@@ -896,19 +671,19 @@ class TestDispatchIIKO:
     )
     @allure.severity(allure.severity_level.CRITICAL)
     def test_new_batch_creation_when_new_cooking_order_appears(self, get_test_name, iiko_headers):
-        # Устанавливаем максимальное количество заказов в руки = 3 !!!!!!!
+        # Устанавливаем на ПВ default_max_deliveries_for_courier=3
         # TPH у курьеров должен быть одинаков?
 
         # 1. Создаем батчи
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 60, iiko_headers, get_test_name),
-            self.create_order("Сущёвский Вал 55", 30, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Сущёвский Вал 55", 60, iiko_headers),
+            self.delivery_service.create_order("Сущёвский Вал 55", 30, iiko_headers),
         ]
 
         time.sleep(30)
 
         # 2. Появляется новый готовящийся заказ
-        new_order = self.create_order("Олимпийский 26с1", 80, iiko_headers, get_test_name)
+        new_order = self.delivery_service.create_order("Олимпийский 26с1", 80, iiko_headers)
 
         # 3. Проверка
         # Создается новый бэтч на одного из курьеров, у которого нет незахлопнутного бэтча.
@@ -922,65 +697,53 @@ class TestDispatchIIKO:
         2. Все заказы завершают приготовление
         3. Проверяем что батч захлопнулся и выполнены все необходимые действия
         """
-        # Настраиваем курьера
-        self._setup_required_couriers(
-            get_test_name,
-            admin_auth_headers,
-            courier_iiko_data,
-            courier_names=["Семен"]
-        )
-        
+        # Настраиваем курьера ["Семен"]
+
         # 1. Создаем батч с несколькими заказами
         batch_orders = [
-            self.create_order("Башиловская 22", duration=30, iiko_headers=iiko_headers, test_name=get_test_name), # READY
-            self.create_order("Башиловская 22", duration=45, iiko_headers=iiko_headers, test_name=get_test_name) # READY
+            self.delivery_service.create_order("Башиловская 22", 30, iiko_headers), # READY
+            self.delivery_service.create_order("Башиловская 22", 45, iiko_headers) # READY
         ]
         
         # 2. Готовим заказы из батча 1 (происходит назначение на курьера)
         time.sleep(60)  # Ждем завершения приготовления
         
-        # 3. Проверяем что ботч захлопнут
+        # 3. Проверяем что батч захлопнут
         courier_id = courier_iiko_data["couriers"]["Семен"]
-        courier_headers = AuthService.get_courier_headers(courier_id=courier_id, admin_headers=admin_auth_headers)
+        courier_headers = AuthService.get_courier_headers(courier_id, admin_auth_headers)
         batch_info = self.courier_service.get_courier_batch_deliveries(get_test_name, courier_headers)
         print(batch_info)
         
         # Проверяем что все заказы в статусе готово к доставке
-        # Проверяем что ботч захлопнут (нет готовящихся заказов)
+        # Проверяем что батч захлопнут (нет готовящихся заказов)
         assert batch_info['deliveries'] == []
         assert len(batch_info['deliveries']) == 0
         # Проверяем что курьер получил уведомление
 
-    @allure.title("26 - Захлопывание ботча - Завершено приготовление единственного заказа в ботче")
+    @allure.title("26 - Захлопывание ботча - Завершено приготовление единственного заказа в батче")
     @allure.severity(allure.severity_level.CRITICAL)
     def test_batch_close_single_order_completed(self, get_test_name, iiko_headers, admin_auth_headers, courier_iiko_data):
         """
-        1. Создаем ботч ровно с одним заказом
+        1. Создаем батч ровно с одним заказом
         2. Заказ завершает приготовление
-        3. Проверяем что ботч захлопнулся
+        3. Проверяем что батч захлопнулся
         """
-        # Настраиваем курьера
-        self._setup_required_couriers(
-            get_test_name,
-            admin_auth_headers,
-            courier_iiko_data,
-            courier_names=["Семен"]
-        )
+        # Настраиваем курьера ["Семен"]
         
-        # 1. Создаем ботч с одним заказом
-        single_order = self.create_order("Башиловская 22", duration=30, iiko_headers=iiko_headers, test_name=get_test_name) # READY
+        # 1. Создаем батч с одним заказом
+        single_order = self.delivery_service.create_order("Башиловская 22", 30, iiko_headers) # READY
         
         # 2. Готовим заказы из батча 1 (происходит назначение на курьера)
         time.sleep(30) # Ждем завершения приготовления
         
-        # 3. Проверяем статус ботча
+        # 3. Проверяем статус батча
         courier_id = courier_iiko_data["couriers"]["Семен"]
-        courier_headers = AuthService.get_courier_headers(courier_id=courier_id, admin_headers=admin_auth_headers)
+        courier_headers = AuthService.get_courier_headers(courier_id, admin_auth_headers)
         batch_info = self.courier_service.get_courier_batch_deliveries(get_test_name, courier_headers)
         print(batch_info)
 
         # Проверяем что все заказы в статусе готово к доставке
-        # Проверяем что ботч захлопнут (нет готовящихся заказов)
+        # Проверяем что батч захлопнут (нет готовящихся заказов)
         assert batch_info['deliveries'] == []
         assert len(batch_info['deliveries']) == 0
         # Проверяем что курьер получил уведомление
@@ -992,20 +755,14 @@ class TestDispatchIIKO:
         1. Создаем ботч с готовыми и готовящимися заказами
         2. Имитируем ситуацию "некогда ждать" (готовые заказы могут опоздать)
         3. Проверяем что:
-        - Ботч захлопнут
+        - Бaтч захлопнут
         - Неготовый заказ возвращен в пул распределения
         """
-        # Настраиваем курьера
-        # self._setup_required_couriers(
-        #     get_test_name,
-        #     admin_auth_headers,
-        #     courier_iiko_data,
-        #     courier_names=["Семен"]
-        # )
+        # Настраиваем курьера ["Семен"]
         
         # 1. Создаем ботч с разными заказами
-        ready_order = self.create_order("Башиловская 22", duration=15, iiko_headers=iiko_headers, test_name=get_test_name) # READY
-        cooking_order = self.create_order("Башиловская 22", duration=60, iiko_headers=iiko_headers, test_name=get_test_name)
+        ready_order = self.delivery_service.create_order("Башиловская 22", 15, iiko_headers) # READY
+        cooking_order = self.delivery_service.create_order("Башиловская 22", 60, iiko_headers)
         
         # 2. Готовим заказ из батча (происходит назначение на курьера)
         time.sleep(30) # Ждем завершения приготовления
@@ -1033,30 +790,24 @@ class TestDispatchIIKO:
         2. Проверяем что заказ не был добавлен ни в один батч
         3. Проверяем что время для вызова 3PL рассчитывается корректно
         """
-        # Настраиваем курьеров
-        self._setup_required_couriers(
-            get_test_name,
-            admin_auth_headers,
-            courier_iiko_data,
-            courier_names=["Семен", "Федор", "3PL"]
-        )
+        # Настраиваем курьеров ["Семен", "Федор", "3PL"]
 
         # 1. Создаем батчи
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 60, iiko_headers, get_test_name),
-            self.create_order("Сущёвский Вал 55", 30, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Сущёвский Вал 55", 60, iiko_headers),
+            self.delivery_service.create_order("Сущёвский Вал 55", 30, iiko_headers),
         ]
 
         second_batch = [
-            self.create_order("Анненская 17", 60, iiko_headers, get_test_name),
-            self.create_order("Анненская 17", 45, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Анненская 17", 60, iiko_headers),
+            self.delivery_service.create_order("Анненская 17", 45, iiko_headers),
         ]
 
         time.sleep(15)
 
         # 2. Появляется новый готовящийся заказ с уникальными параметрами (например, очень далекий адрес)
         test_duration = 120
-        new_order = self.create_order("Чертановская 26", test_duration, iiko_headers, get_test_name)
+        new_order = self.delivery_service.create_order("Чертановская 26", test_duration, iiko_headers)
         ROUTE_TIME = 65 # по ЯКартам - 65...93 мин, разница с time_deadline_3pl = 23 мин
         
         # Ждем достаточно времени для обработки батчинга
@@ -1091,32 +842,25 @@ class TestDispatchIIKO:
         3. Через несколько минут происходит триггер перебэтчинга, и в результате этого ребэтча заказ должен сбэтчиться в какой-либо бэтч.
         4. Еще через некоторое время бэтч, в который попал этот заказ, захлопывается.
         """
-        # Кол-во заказов в руки = 3!!!!!!!!!!
+        # Устанавливаем на ПВ default_max_deliveries_for_courier=3
+        # Настраиваем курьеров ["Семен", "Федор", "3PL"]
 
-        # 1. Настраиваем курьеров
-        # self._setup_required_couriers(
-        #     get_test_name,
-        #     admin_auth_headers,
-        #     courier_iiko_data,
-        #     courier_names=["Семен", "Федор", "3PL"]
-        # )
-
-        # 2. Создаем батчи
+        # 1. Создаем батчи
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 15, iiko_headers, get_test_name), # CANCEL
-            self.create_order("Сущёвский Вал 55", 30, iiko_headers, get_test_name),
-            self.create_order("Октябрьская 105", 40, iiko_headers, get_test_name),
-            self.create_order("Октябрьская 105", 20, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Сущёвский Вал 55", 15, iiko_headers), # CANCEL
+            self.delivery_service.create_order("Сущёвский Вал 55", 30, iiko_headers),
+            self.delivery_service.create_order("Октябрьская 105", 40, iiko_headers),
+            self.delivery_service.create_order("Октябрьская 105", 20, iiko_headers),
         ]
 
         second_batch = [
-            self.create_order("Анненская 2", 45, iiko_headers, get_test_name),
-            self.create_order("Анненская 17", 60, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Анненская 2", 45, iiko_headers),
+            self.delivery_service.create_order("Анненская 17", 60, iiko_headers),
         ]
 
-        # 3. Отменяем из батча заказ, парный с нераспределенным заказом по адресу (триггер перебэтчинга)
-        # 4. Ждем захлопывания бэтча
-        # 5. Проверки
+        # 2. Отменяем из батча заказ, парный с нераспределенным заказом по адресу (триггер перебэтчинга)
+        # 3. Ждем захлопывания бэтча
+        # 4. Проверки
         # - Заказ бэтчится в какой-либо бэтч.
         # - Таймер 3PL для этого заказа не удаляется до тех пор, пока бэтч с этим заказом не захлопнется.
         # - После залопывания бэтча с этим заказом таймер 3PL для этого заказа удаляется.
@@ -1134,27 +878,20 @@ class TestDispatchIIKO:
         3. Через несколько минут происходит триггер перебэтчинга, и в результате этого ребэтча заказ должен сбэтчиться в какой-либо бэтч.
         4. После этого курьер нажимает ""Не буду ждать"" на этот заказ и он убирается из бэтча."
         """
-        # 3 заказа в руки!!!!!!!!
-
-        # 1. Настраиваем курьеров
-        # self._setup_required_couriers(
-        #     get_test_name,
-        #     admin_auth_headers,
-        #     courier_iiko_data,
-        #     courier_names=["Семен", "Федор"]
-        # )
+        # Устанавливаем на ПВ default_max_deliveries_for_courier=3
+        # Настраиваем курьеров ["Семен", "Федор"]
         
         # 2. Создаем батчи
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 15, iiko_headers, get_test_name), # CANCEL
-            self.create_order("Сущёвский Вал 55", 30, iiko_headers, get_test_name),
-            self.create_order("Октябрьская 105", 40, iiko_headers, get_test_name),
-            self.create_order("Октябрьская 105", 20, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Сущёвский Вал 55", 15, iiko_headers), # CANCEL
+            self.delivery_service.create_order("Сущёвский Вал 55", 30, iiko_headers),
+            self.delivery_service.create_order("Октябрьская 105", 40, iiko_headers),
+            self.delivery_service.create_order("Октябрьская 105", 20, iiko_headers),
         ]
 
         second_batch = [
-            self.create_order("Анненская 2", 45, iiko_headers, get_test_name),
-            self.create_order("Анненская 17", 60, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Анненская 2", 45, iiko_headers),
+            self.delivery_service.create_order("Анненская 17", 60, iiko_headers),
         ]
 
         # 3. Отменяем из батча заказ, парный с нераспределенным заказом по адресу (триггер перебэтчинга)
@@ -1175,27 +912,20 @@ class TestDispatchIIKO:
         5. Еще через некоторое время наступает время, когда с учетом <Время подачи внешнего курьера>, <Время на получение заказа>,
         расчетное время в пути <Время на передачу заказа клиенту> и <Допустимое время опоздания 3PL> не остается времени ждать и нужно вызывать 3PL.
         """
-        # Кол-во заказов в руки = 3!!!!!!!!!!
-
-        # 1. Настраиваем курьеров
-        # self._setup_required_couriers(
-        #     get_test_name,
-        #     admin_auth_headers,
-        #     courier_iiko_data,
-        #     courier_names=["Семен", "Федор", "3PL"]
-        # )
+        # Устанавливаем на ПВ default_max_deliveries_for_courier=3
+        # Настраиваем курьеров ["Семен", "Федор", "3PL"]
 
         # 2. Создаем батчи
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 15, iiko_headers, get_test_name), # UNDISTRIBUTED
-            self.create_order("Сущёвский Вал 55", 30, iiko_headers, get_test_name),
-            self.create_order("Октябрьская 105", 40, iiko_headers, get_test_name),
-            self.create_order("Октябрьская 105", 20, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Сущёвский Вал 55", 15, iiko_headers), # UNDISTRIBUTED
+            self.delivery_service.create_order("Сущёвский Вал 55", 30, iiko_headers),
+            self.delivery_service.create_order("Октябрьская 105", 40, iiko_headers),
+            self.delivery_service.create_order("Октябрьская 105", 20, iiko_headers),
         ]
 
         second_batch = [
-            self.create_order("Анненская 2", 45, iiko_headers, get_test_name),
-            self.create_order("Анненская 17", 60, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Анненская 2", 45, iiko_headers),
+            self.delivery_service.create_order("Анненская 17", 60, iiko_headers),
         ]
 
         # 3. Меняем таймтил на любом заказе кроме нераспределенного (1й триггер перебэтчинга)
@@ -1221,26 +951,19 @@ class TestDispatchIIKO:
         3. У курьера, на которого переназначили этот заказ, есть незахлопнутый бэтч, в которых этот переназначенный заказ
         проходит и по размеру бэтча, и по другим критериям (<Радиус объединения доставок>, <Допустимое время опоздания> и т.д.)"
         """
-        # 3 заказа в руки!!!!!!!!!
-
-        # 1. Настраиваем курьеров
-        # self._setup_required_couriers(
-        #     get_test_name,
-        #     admin_auth_headers,
-        #     courier_iiko_data,
-        #     courier_names=["Семен", "Федор"]
-        # )
+        # Устанавливаем на ПВ default_max_deliveries_for_courier=3
+        # Настраиваем курьеров ["Семен", "Федор"]
 
         # 1. Создаем батчи
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 60, iiko_headers, get_test_name),
-            self.create_order("Сущёвский Вал 55", 30, iiko_headers, get_test_name), 
-            self.create_order("Ямская 10", 60, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Сущёвский Вал 55", 60, iiko_headers),
+            self.delivery_service.create_order("Сущёвский Вал 55", 30, iiko_headers), 
+            self.delivery_service.create_order("Ямская 10", 60, iiko_headers),
         ]
 
         second_batch = [
-            self.create_order("Ямская 10", 45, iiko_headers, get_test_name), # READY
-            self.create_order("Сущёвский Вал 55", 20, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Ямская 10", 45, iiko_headers), # READY
+            self.delivery_service.create_order("Сущёвский Вал 55", 20, iiko_headers),
         ]
         
         # 2. Готовим единственный заказ из 2-го батча (они назначаются на курьера)
@@ -1268,25 +991,18 @@ class TestDispatchIIKO:
         3. У курьера, на которого переназначили этот заказ, есть незахлопнутый бэтч, в которых этот переназначенный заказ проходит
         по размеру бэтча (<Максимальное количество заказов в руки>), но не проходит хотя бы по одному из других критериев.
         """
-        # Кол-во заказов в руки = 3!!!!!!!!!!
-
-        # 1. Настраиваем курьеров
-        # self._setup_required_couriers(
-        #     get_test_name,
-        #     admin_auth_headers,
-        #     courier_iiko_data,
-        #     courier_names=["Семен", "Федор"]
-        # )
+        # Устанавливаем на ПВ default_max_deliveries_for_courier=3
+        # Настраиваем курьеров ["Семен", "Федор"]
 
         # 1. Создаем батчи
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 80, iiko_headers, get_test_name),
-            self.create_order("Ямская 10", 60, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Сущёвский Вал 55", 80, iiko_headers),
+            self.delivery_service.create_order("Ямская 10", 60, iiko_headers),
         ]
 
         # при time_till >= 13 (или 15?) минут - все 3 заказа будут в батче у курьера
         third_order_for_first_batch = [
-            self.create_order("Октябрьская 105", 12, iiko_headers, get_test_name), # READY
+            self.delivery_service.create_order("Октябрьская 105", 12, iiko_headers), # READY
         ]
         
         # 2. Готовим заказ из 1-го батча (они назначаются на курьера)
@@ -1308,25 +1024,18 @@ class TestDispatchIIKO:
         3. У курьера, на которого переназначили этот заказ, есть незахлопнутый бэтч, в который этот переназначенный заказ не проходит
         по <Максимальное количество заказов в руки>.
         """
-        # Кол-во заказов в руки = 3!!!!!!!!!!
-
-        # 1. Настраиваем курьеров
-        # self._setup_required_couriers(
-        #     get_test_name,
-        #     admin_auth_headers,
-        #     courier_iiko_data,
-        #     courier_names=["Семен", "Федор"]
-        # )
+        # Устанавливаем на ПВ default_max_deliveries_for_courier=3
+        # Настраиваем курьеров ["Семен", "Федор"]
 
         # 1. Создаем батчи
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 60, iiko_headers, get_test_name),
-            self.create_order("Сущёвский Вал 55", 30, iiko_headers, get_test_name), 
-            self.create_order("Ямская 10", 60, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Сущёвский Вал 55", 60, iiko_headers),
+            self.delivery_service.create_order("Сущёвский Вал 55", 30, iiko_headers), 
+            self.delivery_service.create_order("Ямская 10", 60, iiko_headers),
         ]
 
         second_batch = [
-            self.create_order("Ямская 10", 45, iiko_headers, get_test_name), # READY
+            self.delivery_service.create_order("Ямская 10", 45, iiko_headers), # READY
         ]
         
         # 2. Готовим заказ из 1-го батча (они назначаются на курьера)
@@ -1346,25 +1055,18 @@ class TestDispatchIIKO:
         2. Логист вручную в iikoFront переназначает один из заказов этого бэтча на другого курьера
         3. У курьера, на которого переназначили этот заказ, есть захлопнутый бэтч.
         """
-        # Кол-во заказов в руки = 3!!!!!!!!!!
-
-        # 1. Настраиваем курьеров
-        # self._setup_required_couriers(
-        #     get_test_name,
-        #     admin_auth_headers,
-        #     courier_iiko_data,
-        #     courier_names=["Семен", "Федор"]
-        # )
+        # Устанавливаем на ПВ default_max_deliveries_for_courier=3
+        # Настраиваем курьеров ["Семен", "Федор"]
 
         # 1. Создаем батчи
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 60, iiko_headers, get_test_name), # READY
-            self.create_order("Сущёвский Вал 55", 30, iiko_headers, get_test_name), # READY
-            self.create_order("Ямская 10", 60, iiko_headers, get_test_name), # READY
+            self.delivery_service.create_order("Сущёвский Вал 55", 60, iiko_headers), # READY
+            self.delivery_service.create_order("Сущёвский Вал 55", 30, iiko_headers), # READY
+            self.delivery_service.create_order("Ямская 10", 60, iiko_headers), # READY
         ]
 
         second_batch = [
-            self.create_order("Ямская 10", 45, iiko_headers, get_test_name), # READY
+            self.delivery_service.create_order("Ямская 10", 45, iiko_headers), # READY
         ]
         
         # 2. Готовим все заказы (они назначаются на курьеров и у нас будет 2 закрытых батча)
@@ -1383,26 +1085,19 @@ class TestDispatchIIKO:
         1. Бэтч не захлопнут.
         2. Логист вручную в iikoFront переназначает один из заказов этого бэтча на другого курьера
         """
-        # Кол-во заказов в руки = 3!!!!!!!!!!
-
-        # 1. Настраиваем курьеров
-        # self._setup_required_couriers(
-        #     get_test_name,
-        #     admin_auth_headers,
-        #     courier_iiko_data,
-        #     courier_names=["Семен", "Федор"]
-        # )
+        # Устанавливаем на ПВ default_max_deliveries_for_courier=3
+        # Настраиваем курьеров ["Семен", "Федор"]
 
         # 1. Создаем батчи
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 60, iiko_headers, get_test_name), # READY
-            self.create_order("Сущёвский Вал 55", 30, iiko_headers, get_test_name), # READY
-            # self.create_order("Ямская 10", 60, iiko_headers, get_test_name),
-            self.create_order("Веткина 2Ас7", 100, iiko_headers, get_test_name), 
+            self.delivery_service.create_order("Сущёвский Вал 55", 60, iiko_headers), # READY
+            self.delivery_service.create_order("Сущёвский Вал 55", 30, iiko_headers), # READY
+            # self.delivery_service.create_order("Ямская 10", 60, iiko_headers),
+            self.delivery_service.create_order("Веткина 2Ас7", 100, iiko_headers), 
         ]
 
         second_batch = [
-            self.create_order("Ямская 10", 45, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Ямская 10", 45, iiko_headers),
         ]
 
         # 2. Готовим 2 из 3-х заказов в 1-м батче
@@ -1421,21 +1116,14 @@ class TestDispatchIIKO:
         1. Бэтч не захлопнут.
         2. Логист назначает курьера этого бэтча на этот заказ в iiko.
         """
-        # Кол-во заказов в руки = 3!!!!!!!!!!
-
-        # 1. Настраиваем курьеров
-        # self._setup_required_couriers(
-        #     get_test_name,
-        #     admin_auth_headers,
-        #     courier_iiko_data,
-        #     courier_names=["Семен", "Федор"]
-        # )
+        # Устанавливаем на ПВ default_max_deliveries_for_courier=3
+        # Настраиваем курьеров ["Семен", "Федор"]
 
         # 1. Создаем батчи
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 60, iiko_headers, get_test_name),
-            self.create_order("Сущёвский Вал 55", 30, iiko_headers, get_test_name),
-            self.create_order("Ямская 10", 60, iiko_headers, get_test_name), 
+            self.delivery_service.create_order("Сущёвский Вал 55", 60, iiko_headers),
+            self.delivery_service.create_order("Сущёвский Вал 55", 30, iiko_headers),
+            self.delivery_service.create_order("Ямская 10", 60, iiko_headers), 
         ]
 
         # 2. Логист назначает курьера этого бэтча на этот заказ в терминале
@@ -1469,27 +1157,19 @@ class TestDispatchIIKO:
         1. Заказ не относится ни к одному бэтчу.
         2. Логист назначает заказ на курьера, у которого есть незахлопнутый бэтч, и этот заказ не проходит хотя бы по одному критерию бэтчинга.
         """
-        # Кол-во заказов в руки = 3!!!!!!!!!!
-
-        # 1. Настраиваем курьеров
-        # self._setup_required_couriers(
-        #     get_test_name,
-        #     admin_auth_headers,
-        #     courier_iiko_data,
-        #     courier_names=["Семен", "3PL"]
-        # )
+        # Устанавливаем на ПВ default_max_deliveries_for_courier=3
+        # Настраиваем курьеров ["Семен", "3PL"]
 
         # 1. Создаем батчи
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 60, iiko_headers, get_test_name),
-            self.create_order("Сущёвский Вал 55", 30, iiko_headers, get_test_name),
-            self.create_order("Ямская 10", 60, iiko_headers, get_test_name), 
+            self.delivery_service.create_order("Сущёвский Вал 55", 60, iiko_headers),
+            self.delivery_service.create_order("Сущёвский Вал 55", 30, iiko_headers),
+            self.delivery_service.create_order("Ямская 10", 60, iiko_headers), 
         ]
 
         time.sleep(15)
-
         undistributed_order = [
-            self.create_order("Ямская 10", 45, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Ямская 10", 45, iiko_headers),
         ]
 
         # 2. Логист назначает нераспределенный заказ в терминале на курьера
@@ -1510,21 +1190,14 @@ class TestDispatchIIKO:
         1. Заказ не относится ни к одному бэтчу.
         2. Логист назначает заказ на курьера, у которого есть захлопнутый бэтч
         """
-        # Кол-во заказов в руки = 3!!!!!!!!!!
-
-        # 1. Настраиваем курьеров
-        # self._setup_required_couriers(
-        #     get_test_name,
-        #     admin_auth_headers,
-        #     courier_iiko_data,
-        #     courier_names=["Семен", "3PL"]
-        # )
+        # Устанавливаем на ПВ default_max_deliveries_for_courier=3
+        # Настраиваем курьеров ["Семен", "3PL"]
 
         # 1. Создаем батчи
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 60, iiko_headers, get_test_name), # READY
-            self.create_order("Сущёвский Вал 55", 30, iiko_headers, get_test_name), # READY
-            self.create_order("Ямская 10", 60, iiko_headers, get_test_name), # READY
+            self.delivery_service.create_order("Сущёвский Вал 55", 60, iiko_headers), # READY
+            self.delivery_service.create_order("Сущёвский Вал 55", 30, iiko_headers), # READY
+            self.delivery_service.create_order("Ямская 10", 60, iiko_headers), # READY
         ]
 
         # 2. Готовим заказы из батча 1 (они назначатся на курьера)
@@ -1532,7 +1205,7 @@ class TestDispatchIIKO:
 
         # 3. Создаем нераспределенный заказ
         undistributed_order = [
-            self.create_order("Ямская 10", 45, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Ямская 10", 45, iiko_headers),
         ]
 
         # 4. Логист назначает нераспределенный заказ в терминале на курьера, у которого есть захлопнутый бэтч
@@ -1550,25 +1223,18 @@ class TestDispatchIIKO:
         1. Заказ не относится ни к одному бэтчу.
         2. Логист назначает заказ на курьера 3PL.
         """
-        # Кол-во заказов в руки = 3!!!!!!!!!!
-
-        # 1. Настраиваем курьеров
-        # self._setup_required_couriers(
-        #     get_test_name,
-        #     admin_auth_headers,
-        #     courier_iiko_data,
-        #     courier_names=["Семен", "3PL"]
-        # )
+        # Устанавливаем на ПВ default_max_deliveries_for_courier=3
+        # Настраиваем курьеров ["Семен", "3PL"]
 
         # 1. Создаем батчи
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 60, iiko_headers, get_test_name),
-            self.create_order("Сущёвский Вал 55", 30, iiko_headers, get_test_name),
-            self.create_order("Ямская 10", 60, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Сущёвский Вал 55", 60, iiko_headers),
+            self.delivery_service.create_order("Сущёвский Вал 55", 30, iiko_headers),
+            self.delivery_service.create_order("Ямская 10", 60, iiko_headers),
         ]
 
         undistributed_order = [
-            self.create_order("Ямская 10", 45, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Ямская 10", 45, iiko_headers),
         ]
 
         # 2. Логист назначает нераспределенный заказ в терминале на 3PL
@@ -1581,21 +1247,14 @@ class TestDispatchIIKO:
         1. У заказа в iiko назначен курьер.
         2. Логист убирает курьера с заказа (не назначает другого курьера, а именно оставляет поле Курьер пустым) и сохраняет заказ.
         """
-        # Кол-во заказов в руки = 3!!!!!!!!!!
-
-        # 1. Настраиваем курьеров
-        # self._setup_required_couriers(
-        #     get_test_name,
-        #     admin_auth_headers,
-        #     courier_iiko_data,
-        #     courier_names=["Семен", "Федор", "3PL"]
-        # )
+        # Устанавливаем на ПВ default_max_deliveries_for_courier=3
+        # Настраиваем курьеров ["Семен", "Федор", "3PL"]
 
         # 1. Создаем батчи
         first_batch = [
-            self.create_order("Сущёвский Вал 55", 60, iiko_headers, get_test_name),
-            self.create_order("Сущёвский Вал 55", 30, iiko_headers, get_test_name), # ASSIGN COURIER -> SKIP COURIER
-            self.create_order("Ямская 10", 60, iiko_headers, get_test_name),
+            self.delivery_service.create_order("Сущёвский Вал 55", 60, iiko_headers),
+            self.delivery_service.create_order("Сущёвский Вал 55", 30, iiko_headers), # ASSIGN COURIER -> SKIP COURIER
+            self.delivery_service.create_order("Ямская 10", 60, iiko_headers),
         ]
 
         # 2. Логист готовит 1 из заказов батча (он назначается на курьера)
@@ -1608,12 +1267,6 @@ class TestDispatchIIKO:
             ("Сущёвский Вал 55", 30),
             ("Ямская 10", 15),
             ("Ямская 10", 60),
-        ]
-
-        address_to_durations_2 = [
-            ("Сущёвский Вал 55", 60),
-            ("Сущёвский Вал 55", 30),
-            ("Анненская 2", 60),
         ]
         
         orders = []

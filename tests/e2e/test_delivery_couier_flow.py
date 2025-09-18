@@ -1,10 +1,9 @@
 import allure
 import pytest
 import time
-import json
 import random
-from http import HTTPStatus
 from datetime import datetime
+
 from tests.e2e.config.order_data import generate_hardcoded_orders, generate_random_orders
 from services.auth_service import AuthService
 from services.delivery_service import DeliveryService
@@ -14,11 +13,13 @@ from services.route_service import RouteService
 from src.prepare_data.prepare_delivery_data import PrepareDeliveryData
 from generator.delivery_generator import DeliveryGenerator
 from functions import load_json
+from settings import settings
 
 
 @allure.epic(
     "Testing delivery creation, delivery assignment and delivery completion by courier for SAAS company"
 )
+@pytest.mark.e2e
 class TestDeliveryCourierFlow:
     auth_service = AuthService()
     delivery_service = DeliveryService()
@@ -43,15 +44,8 @@ class TestDeliveryCourierFlow:
             time.sleep(5)
 
     @allure.title("End-to-End Test: Single Order Delivery Flow")
-    @allure.severity(allure.severity_level.BLOCKER)
-    def test_any_order_delivery(
-        self,
-        timer,
-        get_test_name,
-        logistician_saas_auth_headers,
-        courier_saas_auth_headers,
-        courier_data,
-    ):
+    @allure.severity(allure.severity_level.CRITICAL)
+    def test_any_order_delivery(self, get_test_name, logistician_saas_auth_headers, courier_saas_auth_headers):
         """
         Проверка полного цикла выполнения доставки заданного количество заказов:
         - Создание доставки на рандомный адрес.
@@ -60,10 +54,9 @@ class TestDeliveryCourierFlow:
         - Выполнение всех этапов доставки ("pickup_arrived", "pickuped", "delivered").
         - Завершение доставки с учетом ограничения на кнопку 'Передал' в приложении курьера.
         """
-        company_id = courier_data["company_id"]
-        pickup_point_id = courier_data["pickup_point_id"]
+        company_id = settings.COURIER_COMPANY_ID
+        pickup_point_id = settings.COURIER_PICKUP_POINT_ID
         courier_id = self.auth_service.get_courier_id(courier_saas_auth_headers)
-
 
         # Шаг 1: Создание заказа
         orders = generate_random_orders(count=random.randint(1, 5))
@@ -115,15 +108,8 @@ class TestDeliveryCourierFlow:
 
 
     @allure.title("End-to-End Test: Multi-Order Routing and Delivery Flow")
-    @allure.severity(allure.severity_level.BLOCKER)
-    def test_multiple_deliveries_routing_flow(
-        self,
-        timer,
-        get_test_name,
-        logistician_saas_auth_headers,
-        courier_saas_auth_headers,
-        courier_data,
-    ):
+    @allure.severity(allure.severity_level.CRITICAL)
+    def test_multiple_deliveries_routing_flow(self, get_test_name, logistician_saas_auth_headers, courier_saas_auth_headers):
         """
         Проверка полного цикла маршрутизации и выполнения нескольких доставок:
         - Создание нескольких заказов.
@@ -132,8 +118,8 @@ class TestDeliveryCourierFlow:
         - Выполнение доставки для каждого заказа.
         - Проверка маршрута курьера на корректность данных и финальный статус.
         """
-        company_id = courier_data["company_id"]
-        pickup_point_id = courier_data["pickup_point_id"]
+        company_id = settings.COURIER_COMPANY_ID
+        pickup_point_id = settings.COURIER_PICKUP_POINT_ID
         courier_id = self.auth_service.get_courier_id(courier_saas_auth_headers)
         date = datetime.now().strftime("%Y-%m-%d")
 

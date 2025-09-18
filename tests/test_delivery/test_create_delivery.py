@@ -2,14 +2,16 @@ import allure
 import pytest
 import json
 import random
+from http import HTTPStatus
+
 from data import get_delivery_endpoints
 from src.http_methods import MyRequests
 from src.assertions import Assertions
 from src.validator import Validator
 from src.schemas import GetDeliverySchemas
 from src.prepare_data.prepare_delivery_data import PrepareDeliveryData
-from http import HTTPStatus
 from generator.delivery_generator import DeliveryGenerator
+from settings import settings
 
 
 @allure.epic("Testing create delivery")
@@ -21,14 +23,13 @@ class TestCreateDelivery:
     delivery_data = PrepareDeliveryData()
     delivery_generator = DeliveryGenerator()
 
-    # SAAS
-
     @allure.title("Create SAAS delivery")
-    @allure.severity(allure.severity_level.BLOCKER)
+    @allure.severity(allure.severity_level.CRITICAL)
+    @pytest.mark.smoke
     def test_create_saas_delivery(self, get_test_name, logistician_saas_auth_headers):
         info = next(self.delivery_generator.generate_delivery(
-                company_id="ac6d1196-3488-49b0-b670-8361bca1d8d6", # BSL
-                pickup_point_id="9f8896d7-3f85-4d8c-9d6e-e0b9c672cf9a", # ПВ в Минске
+                company_id=settings.COURIER_COMPANY_ID,
+                pickup_point_id=settings.COURIER_PICKUP_POINT_ID,
                 recipient_address="Беларусь, г Минск, ул Брестская, д 68 к 1",
                 recipient_point={
                     "latitude": 53.85426,
@@ -37,11 +38,9 @@ class TestCreateDelivery:
             ),
         )
         data = self.delivery_data.prepare_delivery_data(info=info)
-        # print(data)
 
         # Выполнение POST-запроса для создания доставки
         response = self.request.post(url=self.url.create_delivery, data=data, headers=logistician_saas_auth_headers)
-        # print(response.json())
 
         # Проверка статуса ответа
         self.assertions.assert_status_code(
@@ -58,7 +57,6 @@ class TestCreateDelivery:
             url=f"{self.url.list_of_deliveries}/{delivery_id}",
             headers=logistician_saas_auth_headers,
         )
-        # print(get_response.json())
 
         # Проверка статуса ответа от GET-запроса
         self.assertions.assert_status_code(

@@ -1,11 +1,12 @@
 import allure
+import pytest
+
 from data import get_company_endpoints
 from src.http_methods import MyRequests
 from src.assertions import Assertions
 from src.validator import Validator
 from src.schemas import GetCompanySchemas
 from http import HTTPStatus
-import pytest
 
 
 @allure.epic("Testing get company list")
@@ -26,7 +27,8 @@ class TestGetCompanies:
         return response.json().get("pagination").get("total")
 
     @allure.title("Get all companies")
-    @allure.severity(allure.severity_level.BLOCKER)
+    @allure.severity(allure.severity_level.CRITICAL)
+    @pytest.mark.critical_path
     def test_get_all_companies(self, get_test_name, admin_auth_headers):
         response = self.request.get(
             url=self.url.list_of_companies, headers=admin_auth_headers
@@ -36,11 +38,11 @@ class TestGetCompanies:
             expected_status_code=HTTPStatus.OK,
             test_name=get_test_name,
         )
-        # print(response.json())
         self.validator.validate_response(response=response, model=GetCompanySchemas.get_companies)
 
     @allure.title("Get companies without auth")
     @allure.severity(allure.severity_level.CRITICAL)
+    @pytest.mark.critical_path
     def test_get_companies_without_auth(self, get_test_name):
         response = self.request.get(url=self.url.list_of_companies)
         self.assertions.assert_status_code(
@@ -65,6 +67,7 @@ class TestGetCompanies:
             (1, "xyz", HTTPStatus.BAD_REQUEST),
         ],
     )
+    @pytest.mark.extended
     def test_pagination(
         self,
         get_test_name,
