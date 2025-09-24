@@ -123,13 +123,8 @@ class TestRegularDispatch:
         for addr, dur in zip(addresses, durations):
             self.iiko_delivery_service.create_order(addr, dur, iiko_headers)
 
-    @allure.title("9 - Имитация реального маршрута")
-    def test_real_route(self, iiko_headers):
-        """
-        Маршрут № 7836750 Закрыт Айжигит Калыев +79998172021
-        - https://app.courierica.ru/#/route/5e8ce2fb-4c83-46ca-98fb-eff7797a634b
-        - https://app.courierica.ru/#/route/a9a482c7-554a-4fe0-810e-611a377a66ee
-        """
+    @allure.title("9 - Имитация реального маршрута с фиксированным временем доставки")
+    def test_real_route_with_fixed_duration(self, iiko_headers):
         addresses = [
             "Петровско-Разумовский 28",
             "Соломенная Сторожки 5к1",
@@ -144,8 +139,8 @@ class TestRegularDispatch:
         for addr, dur in zip(addresses, durations):
             self.iiko_delivery_service.create_order(addr, dur, iiko_headers)
 
-    @allure.title("10 - Имитация маршрута Fix Price")
-    def test_fix_price_route(self, iiko_headers):
+    @allure.title("10 - Имитация реального маршрута c максимальным временем доставки")
+    def test_real_route_with_max_duration(self, iiko_headers):
         addresses = [
             "Дмитровское шоссе 169к9",
             "Химки Горшина 9/2",
@@ -171,8 +166,8 @@ class TestRegularDispatch:
         for addr, dur in zip(addresses, durations):
             self.iiko_delivery_service.create_order(addr, dur, iiko_headers)
 
-    @allure.title("11 - Имитация оптимизированного маршрута Fix Price")
-    def test_fix_price_optimized_route(self, iiko_headers):
+    @allure.title("11 - Имитация оптимизированного маршрута")
+    def test_optimized_route(self, iiko_headers):
         addresses = [
             "Солнцевский пр-кт 2",
             "Гарибальди 23",
