@@ -171,3 +171,14 @@ class TestRegularDispatch:
         for addr, dur in zip(addresses, durations):
             self.iiko_delivery_service.create_order(addr, dur, iiko_headers)
 
+    @allure.title("11 - Имитация оптимизированного маршрута Fix Price")
+    def test_fix_price_optimized_route(self, iiko_headers):
+        addresses = [
+            "Солнцевский пр-кт 2",
+            "Гарибальди 23",
+            "Днепропетровская 2",
+            "Нежинская 6к1",
+        ]
+        durations = [6 * 60] * len(addresses)
+        for addr, dur in zip(addresses, durations):
+            self.iiko_delivery_service.create_order(addr, dur, iiko_headers)

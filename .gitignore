@@ -14,7 +14,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-.env.*
+.env.dev
+.env.prod
 
 # Debug
 TODO
