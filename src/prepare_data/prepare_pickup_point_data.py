@@ -8,6 +8,12 @@ class PreparePickupPointData(BaseTestData):
     Класс для подготовки данных пункта выдачи в формате, подходящем для HTTP-запросов.
     """
     def prepare_pickup_point_json(self, info: PickupPointDataClass) -> str:
+        """
+        Подготавливает данные пункта выдачи в формате JSON.
+
+        :param info: Данные пункта выдачи в виде объекта PickupPointDataClass.
+        :return: JSON-строка с данными пункта выдачи.
+        """
         data = PickupPointRequestSchema(
             company_id=info.company_id,
             name=info.name,
