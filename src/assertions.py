@@ -10,7 +10,18 @@ class Assertions:
     @staticmethod
     def assert_status_code(response: Response, expected_status_code: int, test_name: str = None):
         actual_status_code = response.status_code
-        assert actual_status_code == expected_status_code, get_logger(test_name).error(
+
+        if actual_status_code != expected_status_code:
+            # Получаем X-Request-ID из заголовка, если есть
+            request_id = response.headers.get("X-Request-ID")
+            request_id_info = f" | X-Request-ID: {request_id}" if request_id else ""
+
+            # Логируем с X-Request-ID
+            get_logger(test_name).error(
+                f"Expected {expected_status_code} status code but got {actual_status_code} status code instead{request_id_info}"
+            )
+
+        assert actual_status_code == expected_status_code, (
             f"Expected {expected_status_code} status code but got {actual_status_code} status code instead"
         )
 

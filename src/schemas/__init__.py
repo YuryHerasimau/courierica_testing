@@ -1,16 +1,23 @@
-from src.schemas import company_response_schema, delivery_response_schema
+from src.schemas import (
+    company_response_schema, delivery_response_schema,
+    pickup_point_request_schema, pickup_point_response_schema
+)
 
 
 class GetCompanySchemas:
     """Класс для хранения схем получения информации о компаниях."""
-
     create_company = company_response_schema.CompanyDetailsSchema
     get_company_by_id = company_response_schema.CompanyDetailsSchema
     get_companies = company_response_schema.CompaniesListSchema
 
 class GetDeliverySchemas:
     """Класс для хранения схем получения информации о доставках."""
-
     create_delivery = delivery_response_schema.DeliveryDetailsSchema
     get_delivery_by_id = delivery_response_schema.DeliveryDetailsSchema
     get_deliveries = delivery_response_schema.DeliveriesListSchema
+
+class GetPickupPointSchemas:
+    """Класс для хранения схем получения информации о пунктах выдачи."""
+    create_pickup_point = pickup_point_response_schema.PickupPointDetailsSchema
+    get_pickup_point_by_id = pickup_point_response_schema.PickupPointDetailsSchema
+    get_pickup_points = pickup_point_response_schema.PickupPointsListSchema
