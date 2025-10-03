@@ -13,6 +13,9 @@ class PrepareIikoDeliveryData(BaseTestData):
     def prepare_iiko_delivery_data(self, info: IikoDeliveryDataClass) -> str:
         """
         Подготавливает данные заказа iiko в формате JSON.
+
+        :param info: Данные заказа iiko в виде объекта IikoDeliveryDataClass.
+        :return: JSON-строка с данными заказа iiko.
         """
         data = IikoDeliveryRequestSchema(
             organizationId=info.organization_id,

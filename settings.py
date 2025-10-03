@@ -28,10 +28,13 @@ class Settings(BaseSettings):
     COURIER_COMPANY_ID: str
     COURIER_PICKUP_POINT_ID: str
 
-    REDIS_HOST: str = "localhost"
-    REDIS_PORT: int = 6379
-    REDIS_SSH_ALIAS: str | None = None
-    REDIS_SSH_HOST: str | None = None
+    REDIS_HOST: str
+    REDIS_PORT: int
+    REDIS_PASSWORD: str
+    REDIS_SSH_HOST: str
+    REDIS_SSH_PORT: int
+    REDIS_SSH_USER: str
+    REDIS_SSH_KEY: str
 
     class Config:
         env_file = f".env.{os.getenv('TEST_ENV', 'dev')}"
