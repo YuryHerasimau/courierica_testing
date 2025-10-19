@@ -36,6 +36,12 @@ class Settings(BaseSettings):
     REDIS_SSH_USER: str
     REDIS_SSH_KEY: str
 
+    CLICKHOUSE_HOST: str
+    CLICKHOUSE_PORT: int
+    CLICKHOUSE_USER: str
+    CLICKHOUSE_PASSWORD: str
+    CLICKHOUSE_DATABASE: str
+
     class Config:
         env_file = f".env.{os.getenv('TEST_ENV', 'dev')}"
 
