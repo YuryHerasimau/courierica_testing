@@ -27,32 +27,25 @@ class TestKafkaEvents:
             )
             # Ждем подтверждения
             result = future.get(timeout=10)
-            print(f"✅ Подключение успешно! Сообщение отправлено в {result.topic}")
+            assert result.topic is not None, "Не удалось отправить сообщение в Kafka"
         except KafkaError as e:
-            pytest.fail(f"❌ Не удалось подключиться к Kafka: {e}")
+            pytest.fail(f"Не удалось подключиться к Kafka: {e}")
 
     @allure.title("Проверка здоровья Kafka через Consumer")
     def test_kafka_health_check(self, kafka_consumer):
-        print("🏥 Проверяем здоровье Kafka...")
         try:
             # пытаемся получить список топиков
             topics = kafka_consumer.topics()
-            if topics:
-                print(f"✅ Kafka здоров - найдено {len(topics)} топиков")
-                return True
-            else:
-                print("⚠️ Kafka доступен, но топиков не найдено")
-                return False
+            assert len(topics) > 0, "Kafka доступен, но топиков не найдено"
         except KafkaError as e:
-            print(f"❌ Kafka недоступен: {e}")
-            return False
+            pytest.fail(f"Kafka недоступен: {e}")
 
     @allure.title("Проверка наличия нужных топиков")
     def test_kafka_topics_exists(self, kafka_consumer):
-        print("📋 Проверяем топики...")
         try:
             topics = kafka_consumer.topics()
-            print(f"Найдено топиков: {len(topics)}")
+
+            print(f"Найдено всего топиков: {len(topics)}")
             for topic in sorted(topics):
                 print(f"  - {topic}")
             
@@ -60,15 +53,12 @@ class TestKafkaEvents:
             required_topics = ['events']
             for topic in required_topics:
                 assert topic in topics, f"Топик {topic} не найден"
-                print(f"✅ Топик '{topic}' найден")            
         except KafkaError as e:
-            pytest.fail(f"❌ Ошибка при получении топиков: {e}")
+            pytest.fail(f"Ошибка при получении топиков: {e}")
 
     @allure.title("Проверка чтения сообщений в топике events")
     def test_events_topic_has_messages(self, kafka_config):
-        """Для этого теста создаем специального consumer с подпиской на events"""
-        print("📨 Проверяем сообщения в events...")
-        
+        """Для этого теста создаем специального consumer с подпиской на events"""        
         consumer_config = kafka_config.copy()
         consumer_config.update({
             'auto_offset_reset': 'earliest',
@@ -96,40 +86,20 @@ class TestKafkaEvents:
                         'value': message_data,
                         'timestamp': message.timestamp
                     })
-                except json.JSONDecodeError:
-                    print(f"⚠️ Невалидный JSON в offset {message.offset}")
-                except UnicodeDecodeError:
-                    print(f"⚠️ Проблема с декодированием в offset {message.offset}")
+                except (json.JSONDecodeError, UnicodeDecodeError):
+                    continue
                         
             print(f"📊 Найдено сообщений: {len(messages)}")
-            
-            if messages:
-                print("🔍 Примеры сообщений:")
-                for i, msg in enumerate(messages[:3]):  # Показываем первые 3
-                    event_type = msg['value'].get('eventType', 'unknown')
-                    print(f"  {i+1}. {event_type} (offset: {msg['offset']})")
-                    
-                    # Показываем структуру события
-                    if i == 0:  # Только для первого сообщения
-                        print("     Структура:")
-                        for key, value in msg['value'].items():
-                            print(f"       {key}: {type(value).__name__}")
-            else:
-                print("ℹ️ Сообщений не найдено")
-                
-            # Не падаем если сообщений нет
-            if not messages:
-                print("💡 Совет: проверьте, что в системе происходят события (завершение заказов, смены курьеров)")
+            assert messages, "Сообщений в топике events нет"
                 
         except KafkaError as e:
-            pytest.fail(f"❌ Ошибка при чтении сообщений: {e}")
+            pytest.fail(f"Ошибка при чтении сообщений: {e}")
         finally:
             consumer.close()
 
     @allure.title("Проверка структуры событий")
     def test_event_structure_validation(self, kafka_config):
-        print("📝 Проверяем структуру событий...")
-
+        """Для этого теста создаем специального consumer с подпиской на events"""
         consumer_config = kafka_config.copy()
         consumer_config.update({
             'auto_offset_reset': 'earliest',
@@ -149,49 +119,43 @@ class TestKafkaEvents:
                     
                 try:
                     message_data = json.loads(message.value.decode('utf-8'))
-                    sample_messages.append(message_data)
+                    headers = {key: value.decode('utf-8') for key, value in message.headers} if message.headers else {}
+                    sample_messages.append({
+                        'body': message_data,
+                        'headers': headers
+                    })
                 except json.JSONDecodeError:
                     continue
             
             consumer.close()
             
             if sample_messages:
-                print("✅ Найдены сообщения для анализа")
+                # Проверяем структуру тела сообщения
+                expected_body_fields = ['eventId', 'eventType', 'timestamp', 'data']
                 
-                # Анализируем структуру
-                expected_structure = {
-                    'eventId': 'string (UUID)',
-                    'eventType': 'string',
-                    'timestamp': 'string (ISO)',
-                    'source': 'string', 
-                    'data': 'object'
-                }
-                
-                print("📋 Ожидаемая структура:")
-                for field, description in expected_structure.items():
-                    print(f"  - {field}: {description}")
-                
-                print("🔍 Фактическая структура (на примерах):")
-                for i, msg in enumerate(sample_messages):
-                    print(f"  Сообщение {i+1}:")
-                    print(msg)
-                    for key in expected_structure.keys():
-                        if key in msg:
-                            value_type = type(msg[key]).__name__
-                            print(f"    ✅ {key}: {value_type}")
-                        else:
-                            print(f"    ❌ {key}: отсутствует")
-                            
-            else:
-                print("ℹ️ Сообщений для анализа не найдено")
-                print("💡 Проверьте, что ledger-service обрабатывает события")
-                
+                for msg in sample_messages:
+                    body = msg['body']
+                    headers = msg['headers']
+                    
+                    # Проверяем обязательные поля в теле
+                    for field in expected_body_fields:
+                        assert field in body, f"Отсутствует обязательное поле {field} в теле сообщения"
+                    
+                    # Проверяем типы полей в теле
+                    assert isinstance(body['eventId'], str), "eventId должен быть строкой"
+                    assert isinstance(body['eventType'], str), "eventType должен быть строкой"
+                    assert isinstance(body['timestamp'], str), "timestamp должен быть строкой"
+                    assert isinstance(body['data'], dict), "data должен быть объектом"
+                    
+                    # Проверяем наличие source в заголовках
+                    assert 'source' in headers, f"Отсутствует поле source в заголовках сообщения"
+                    assert isinstance(headers['source'], str), "source в заголовках должен быть строкой"
+                    
         except KafkaError as e:
-            pytest.fail(f"❌ Ошибка при валидации структуры: {e}")
+            pytest.fail(f"Ошибка при валидации структуры: {e}")
 
     @allure.title("Проверка полного цикла отправки-чтения с готовым Producer")
     def test_kafka_produce_consume_cycle(self, kafka_config, kafka_producer):
-        print("🔄 Тестируем полный цикл отправки-чтения...")
         try:
             # Создаем уникальный тестовый топик
             test_topic = f"test-topic-{int(time.time())}"
@@ -207,9 +171,7 @@ class TestKafkaEvents:
                 json.dumps(test_message).encode('utf-8')
             )
             result = future.get(timeout=10)
-            print(f"✅ Сообщение отправлено в топик: {test_topic}")
-            
-            # Даем время для создания топика
+            assert result.topic == test_topic, f"Сообщение отправлено в неверный топик: {result.topic}"
             time.sleep(2)
             
             # Читаем сообщение со специализированным consumer
@@ -227,7 +189,6 @@ class TestKafkaEvents:
                 try:
                     received_data = json.loads(message.value.decode('utf-8'))
                     if received_data.get('test_id') == test_message['test_id']:
-                        print("✅ Сообщение успешно получено!")
                         found = True
                         break
                 except (json.JSONDecodeError, UnicodeDecodeError):
@@ -235,8 +196,7 @@ class TestKafkaEvents:
             
             consumer.close()
             
-            if not found:
-                print("⚠️ Отправленное сообщение не найдено")
+            assert found, "Отправленное сообщение не найдено при чтении"
                 
         except KafkaError as e:
-            pytest.fail(f"❌ Ошибка в цикле отправки-чтения: {e}")
+            pytest.fail(f"Ошибка в цикле отправки-чтения: {e}")
