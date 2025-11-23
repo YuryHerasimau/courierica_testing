@@ -144,17 +144,18 @@ class TestClickHouseEvents:
         assert count_after > count_before, f"Новые события order.completed не обнаружены. Было: {count_before}, стало: {count_after}"
 
     @allure.title("Проверка правильности потока событий при открытии/закрытии смены курьера")
-    def test_shift_events_flow(self, clickhouse_client, get_test_name, logistician_saas_auth_headers, courier_saas_auth_headers):
+    def test_shift_events_flow(self, clickhouse_client, get_test_name, logistician_saas_auth_headers):
+        self.courier_service.close_all_active_shifts(get_test_name, self.COURIER_ID, logistician_saas_auth_headers)
+
         self.courier_service.turn_on_shift(
             get_test_name, self.COURIER_ID, self.PICKUP_POINT_ID, logistician_saas_auth_headers
         )
-        time.sleep(1)
 
         self.courier_service.close_shift(
             get_test_name, self.COURIER_ID, self.PICKUP_POINT_ID, logistician_saas_auth_headers
         )
+
         time.sleep(1)
-        
         courier_events = clickhouse_client.query("""
             SELECT COUNT(*)
             FROM events 
