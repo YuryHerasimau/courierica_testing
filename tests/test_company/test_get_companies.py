@@ -29,7 +29,7 @@ class TestGetCompanies:
     @allure.title("Get all companies")
     @allure.severity(allure.severity_level.CRITICAL)
     @pytest.mark.critical_path
-    def test_get_all_companies(self, get_test_name, admin_auth_headers):
+    def test_get_all_companies_with_auth(self, get_test_name, admin_auth_headers):
         response = self.request.get(
             url=self.url.list_of_companies, headers=admin_auth_headers
         )
@@ -68,7 +68,7 @@ class TestGetCompanies:
         ],
     )
     @pytest.mark.extended
-    def test_pagination(
+    def test_companies_pagination(
         self,
         get_test_name,
         admin_auth_headers,

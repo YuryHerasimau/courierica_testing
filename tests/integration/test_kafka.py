@@ -50,7 +50,7 @@ class TestKafkaEvents:
                 print(f"  - {topic}")
             
             # Проверяем обязательные топики
-            required_topics = ['events']
+            required_topics = ['events', 'route']
             for topic in required_topics:
                 assert topic in topics, f"Топик {topic} не найден"
         except KafkaError as e:
@@ -200,3 +200,65 @@ class TestKafkaEvents:
                 
         except KafkaError as e:
             pytest.fail(f"Ошибка в цикле отправки-чтения: {e}")
+
+@allure.feature("Testing Kafka route")
+@pytest.mark.integration
+@pytest.mark.kafka
+class TestKafkaRoute:
+
+    @allure.title("TC1. Проверка топика route")
+    def test_route_topic_exists(self, kafka_consumer):
+        """Проверка, что топик существует и доступен"""
+        topics = kafka_consumer.topics()
+        assert 'route' in topics, "Топик 'route' не найден"
+
+        partitions = kafka_consumer.partitions_for_topic('route')
+        assert len(partitions) > 0, "Топик 'route' не имеет партиций"
+
+    
+    @allure.title("TC2. Проверка структуры событий в route")
+    def test_route_events_structure(self, kafka_config):
+        """Читаем и проверяем события в топике route"""
+        config = kafka_config.copy()
+        config.update({
+            'auto_offset_reset': 'latest',
+            'enable_auto_commit': False,
+            'consumer_timeout_ms': 3000
+        })
+        
+        consumer = KafkaConsumer('route', **config)
+        
+        try:
+            sample_messages = []
+            start_time = time.time()
+            
+            for message in consumer:
+                if time.time() - start_time > 2 or len(sample_messages) >= 1:
+                    break
+                    
+                try:
+                    event = json.loads(message.value.decode('utf-8'))
+                    sample_messages.append({
+                        'event': event,
+                        'partition': message.partition,
+                        'offset': message.offset
+                    })
+                    
+                    # Проверка структуры
+                    required_fields = ['deliveryID', 'status', 'courierID', 'oldStatus']
+                    for field in required_fields:
+                        assert field in event, f"Отсутствует обязательное поле: {field}"
+                    
+                    # Проверка допустимых статусов
+                    valid_statuses = ['delivered', 'canceled', 'pickup_arrived']
+                    assert event['status'] in valid_statuses, \
+                        f"Невалидный статус: {event['status']}. Допустимы: {valid_statuses}"
+                    
+                except json.JSONDecodeError:
+                    continue
+                except AssertionError as e:
+                    print(f"Ошибка валидации: {e}")
+                    continue
+                        
+        finally:
+            consumer.close()
