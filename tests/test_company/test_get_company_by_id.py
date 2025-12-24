@@ -46,11 +46,7 @@ class TestGetCompanyById:
             url=f"{self.url.list_of_companies}/{get_latest_company_id_from_first_page}",
             headers=admin_auth_headers,
         )
-        self.assertions.assert_status_code(
-            response=response,
-            expected_status_code=HTTPStatus.OK,
-            test_name=get_test_name,
-        )
+        self.assertions.assert_status_code(response, HTTPStatus.OK, get_test_name)
         self.validator.validate_response(response=response, model=GetCompanySchemas.get_company_by_id)
 
     @allure.title("Get company by random id")
@@ -61,34 +57,18 @@ class TestGetCompanyById:
             url=f"{self.url.list_of_companies}/{str(uuid4())}",
             headers=admin_auth_headers,
         )
-        self.assertions.assert_status_code(
-            response=response,
-            expected_status_code=HTTPStatus.NOT_FOUND,
-            test_name=get_test_name,
-        )
+        self.assertions.assert_status_code(response, HTTPStatus.NOT_FOUND, get_test_name)
 
     @allure.title("Get company by invalid id")
     @allure.severity(allure.severity_level.NORMAL)
-    @pytest.mark.parametrize(
-        "invalid_id",
-        [
-            "",
-            "12345",
-            "invalid-uuid",
-            "non-existent-id",
-        ],
-    )
+    @pytest.mark.parametrize("invalid_id", ["", "12345", "invalid-uuid", "non-existent-id"])
     @pytest.mark.extended
     def test_get_company_by_invalid_id(self, get_test_name, admin_auth_headers, invalid_id):
         response = self.request.get(
             url=f"{self.url.list_of_companies}/{invalid_id}",
             headers=admin_auth_headers,
         )
-        self.assertions.assert_status_code(
-            response=response,
-            expected_status_code=HTTPStatus.BAD_REQUEST,
-            test_name=get_test_name,
-        )
+        self.assertions.assert_status_code(response, HTTPStatus.BAD_REQUEST, get_test_name)
 
     @allure.title("Get company by id without auth")
     @allure.severity(allure.severity_level.CRITICAL)
@@ -97,11 +77,7 @@ class TestGetCompanyById:
         response = self.request.get(
             url=f"{self.url.list_of_companies}/{get_latest_company_id_from_first_page}"
         )
-        self.assertions.assert_status_code(
-            response=response,
-            expected_status_code=HTTPStatus.BAD_REQUEST,
-            test_name=get_test_name,
-        )
+        self.assertions.assert_status_code(response, HTTPStatus.BAD_REQUEST, get_test_name)
 
     @allure.title("Get company by id with extra params")
     @allure.severity(allure.severity_level.NORMAL)
@@ -116,11 +92,7 @@ class TestGetCompanyById:
             url=f"{self.url.list_of_companies}/{get_latest_company_id_from_first_page}?filter=invalid",
             headers=admin_auth_headers,
         )
-        self.assertions.assert_status_code(
-            response=response,
-            expected_status_code=HTTPStatus.OK,
-            test_name=get_test_name,
-        )
+        self.assertions.assert_status_code(response, HTTPStatus.OK, get_test_name)
 
 
     # PERMISSIONS AND ROLES
@@ -142,10 +114,6 @@ class TestGetCompanyById:
             url=f"{self.url.list_of_companies}/{settings.COURIER_COMPANY_ID}",
             headers=headers,
         )
-        self.assertions.assert_status_code(
-            response=response,
-            expected_status_code=expected_status,
-            test_name=get_test_name,
-        )
+        self.assertions.assert_status_code(response, expected_status, get_test_name)
         if expected_status == HTTPStatus.OK:
             self.validator.validate_response(response=response, model=GetCompanySchemas.get_company_by_id)

@@ -36,6 +36,46 @@ class CourierService:
         self.assertions.assert_status_code(response=response, expected_status_code=HTTPStatus.NO_CONTENT, test_name=get_test_name)
         print(f"Courier {courier_id} shift off.")
         return response
+    
+    def close_all_active_shifts(self, get_test_name, courier_id, headers):
+        """Закрытие всех активных смен курьера на ПВ"""
+        
+        # Сначала получаем информацию о курьере и его активных сменах
+        response = self.request.get(
+            url=f"{self.courier_url.list_of_couriers}/{courier_id}",
+            headers=headers
+        )
+        self.assertions.assert_status_code(response=response, expected_status_code=HTTPStatus.OK, test_name=get_test_name)
+        
+        courier_data = response.json()
+        print(f"Courier {courier_id} info: {courier_data}")
+        
+        # Формируем данные для закрытия только АКТИВНЫХ смен
+        shifts_data = []
+        if "pickup_points" in courier_data:
+            for pickup_point in courier_data["pickup_points"]:
+                # Закрываем только те смены, которые сейчас открыты (online: true)
+                if pickup_point.get("online") is True:
+                    shifts_data.append({
+                        "pickup_point_id": pickup_point["id"],
+                        "online": False
+                    })
+        
+        if not shifts_data:
+            print(f"No active shifts found for courier {courier_id}")
+            return None
+        
+        data = {"shifts": shifts_data}
+        
+        # Закрываем все активные смены
+        response = self.request.patch(
+            url=f"{self.courier_url.list_of_couriers}/{courier_id}/shifts",
+            headers=headers,
+            data=json.dumps(data)
+        )
+        self.assertions.assert_status_code(response=response, expected_status_code=HTTPStatus.NO_CONTENT, test_name=get_test_name)
+        print(f"All active shifts for courier {courier_id} have been closed. Closed {len(shifts_data)} shift(s).")
+        return response
 
     def update_courier_geo(self, get_test_name, courier_id, latitude, longitude, headers):
         """Обновление геопозиции курьера"""

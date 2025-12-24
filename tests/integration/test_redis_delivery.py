@@ -1,15 +1,16 @@
 import json
 import time
-
 import allure
 import pytest
 
 
 @allure.feature("Redis Delivery")
 @pytest.mark.integration
-class TestDeliveryRedis:
+@pytest.mark.redis
+@pytest.mark.redis_delivery
+class TestRedisDelivery:
 
-    @allure.title("1 - Проверка существующих ключей")
+    @allure.title("Проверка существующих ключей")
     def test_keys_exist(self, redis_client, sample_delivery):
         delivery_id, courier_id = sample_delivery
 
@@ -19,18 +20,19 @@ class TestDeliveryRedis:
         assert f"delivery:{delivery_id}" in keys
         assert f"courier:{courier_id}" in keys
 
-    @allure.title("2 - Проверка содержимого ключей для delivery")
+    @allure.title("Проверка содержимого ключей для delivery")
     def test_read_delivery_object(self, redis_client, sample_delivery):
         delivery_id, courier_id = sample_delivery
 
         value = redis_client.get(f"delivery:{delivery_id}")
         assert value is not None
+        print("\n📦 Delivery JSON:", value)
 
         data = json.loads(value)
         assert data["delivery"]["number"] == "4666"
         assert data["courier"]["id"] == courier_id
 
-    @allure.title("3 - Проверка содержимого ключей для courier")
+    @allure.title("Проверка содержимого ключей для courier")
     def test_read_courier_object(self, redis_client, sample_delivery):
         delivery_id, courier_id = sample_delivery
 
@@ -40,9 +42,9 @@ class TestDeliveryRedis:
         data = json.loads(value)
         assert data[courier_id] == delivery_id
 
-    @allure.title("4 - Проверка TTL")
+    @allure.title("Проверка TTL ключей")
     def test_ttl_decreases(self, redis_client, sample_delivery):
-        delivery_id, courier_id = sample_delivery
+        delivery_id, _ = sample_delivery
 
         ttl_before = redis_client.ttl(f"delivery:{delivery_id}")
         assert ttl_before > 0
