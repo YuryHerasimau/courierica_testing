@@ -3,7 +3,7 @@ import pytest
 import allure
 
 
-@allure.feature("Redis tests")
+@allure.feature("Redis Basic Operations")
 @pytest.mark.integration
 @pytest.mark.redis
 class TestRedisBasic:
@@ -24,10 +24,3 @@ class TestRedisBasic:
             except redis.exceptions.ResponseError:
                 value = redis_client.type(key)
                 print(f"\n📦 {key} is not string, type={value}")
-
-    @allure.title("Проверка содержимого ключей для delivery")
-    def test_delivery_object(self, redis_client, sample_delivery):
-        delivery_id, _ = sample_delivery
-        value = redis_client.get(f"delivery:{delivery_id}")
-        assert value is not None
-        print("\n📦 Delivery JSON:", value)

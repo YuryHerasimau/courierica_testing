@@ -1,6 +1,5 @@
 import json
 import time
-
 import allure
 import pytest
 
@@ -8,7 +7,8 @@ import pytest
 @allure.feature("Redis Delivery")
 @pytest.mark.integration
 @pytest.mark.redis
-class TestDeliveryRedis:
+@pytest.mark.redis_delivery
+class TestRedisDelivery:
 
     @allure.title("Проверка существующих ключей")
     def test_keys_exist(self, redis_client, sample_delivery):
@@ -26,6 +26,7 @@ class TestDeliveryRedis:
 
         value = redis_client.get(f"delivery:{delivery_id}")
         assert value is not None
+        print("\n📦 Delivery JSON:", value)
 
         data = json.loads(value)
         assert data["delivery"]["number"] == "4666"
@@ -43,7 +44,7 @@ class TestDeliveryRedis:
 
     @allure.title("Проверка TTL ключей")
     def test_ttl_decreases(self, redis_client, sample_delivery):
-        delivery_id, courier_id = sample_delivery
+        delivery_id, _ = sample_delivery
 
         ttl_before = redis_client.ttl(f"delivery:{delivery_id}")
         assert ttl_before > 0

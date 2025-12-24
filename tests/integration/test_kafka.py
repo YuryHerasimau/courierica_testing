@@ -201,6 +201,27 @@ class TestKafkaEvents:
         except KafkaError as e:
             pytest.fail(f"Ошибка в цикле отправки-чтения: {e}")
 
+    def test_consumer_groups_monitoring(self, kafka_config):
+        """Проверяет список consumer groups в Kafka"""
+        from kafka.admin import KafkaAdminClient
+        
+        admin_client = KafkaAdminClient(**kafka_config)
+        
+        try:
+            # Получаем список групп
+            groups = admin_client.list_consumer_groups()
+            print(f"\nConsumer Groups в кластере:")
+            for group in groups:
+                print(f"  - {group[0]} ({group[1]})")
+            
+            # Проверяем наличие тестовых групп (если есть)
+            test_groups = [g for g in groups if g[0].startswith('test-')]
+            if test_groups:
+                print(f"\nНайдены тестовые группы: {len(test_groups)}")
+            
+        finally:
+            admin_client.close()
+
 @allure.feature("Testing Kafka route")
 @pytest.mark.integration
 @pytest.mark.kafka

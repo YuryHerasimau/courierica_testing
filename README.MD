@@ -139,9 +139,8 @@ pytest -m integration
 
 # Combine markers: run smoke OR critical_path
 pytest -m "smoke or critical_path"
-
-# Combine markers: run smoke AND NOT flaky
 pytest -m "smoke and not flaky"
+pytest -m "not integration and not dispatch_v2 and not dispatch_regular"
 ```
 
 ## Generate Allure Report
