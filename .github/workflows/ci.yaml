@@ -29,8 +29,16 @@ jobs:
       COURIER_PICKUP_POINT_ID: ${{ secrets.COURIER_PICKUP_POINT_ID }}
       REDIS_HOST: ${{ secrets.REDIS_HOST }}
       REDIS_PORT: ${{ secrets.REDIS_PORT }}
-      REDIS_SSH_ALIAS: ${{ secrets.REDIS_SSH_ALIAS }}
+      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
       REDIS_SSH_HOST: ${{ secrets.REDIS_SSH_HOST }}
+      REDIS_SSH_PORT: ${{ secrets.REDIS_SSH_PORT }}
+      REDIS_SSH_USER: ${{ secrets.REDIS_SSH_USER }}
+      REDIS_SSH_KEY: ${{ secrets.REDIS_SSH_KEY }}
+      CLICKHOUSE_HOST: ${{ secrets.CLICKHOUSE_HOST }}
+      CLICKHOUSE_PORT: ${{ secrets.CLICKHOUSE_PORT }}
+      CLICKHOUSE_USER: ${{ secrets.CLICKHOUSE_USER }}
+      CLICKHOUSE_PASSWORD: ${{ secrets.CLICKHOUSE_PASSWORD }}
+      CLICKHOUSE_DATABASE: ${{ secrets.CLICKHOUSE_DATABASE }}
     
     steps:
       - uses: actions/checkout@v4
