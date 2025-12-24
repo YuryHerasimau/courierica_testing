@@ -50,7 +50,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest -m e2e --alluredir=allure-results
+          pytest -svk test_create_saas_delivery --alluredir=allure-results
 
       - name: Install Allure
         run: |
