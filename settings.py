@@ -42,6 +42,12 @@ class Settings(BaseSettings):
     CLICKHOUSE_PASSWORD: str
     CLICKHOUSE_DATABASE: str
 
+    DB_HOST: str
+    DB_PORT: int
+    DB_NAME: str
+    DB_USER: str
+    DB_PASSWORD: str
+
     class Config:
         env_file = f".env.{os.getenv('TEST_ENV', 'dev')}"
 

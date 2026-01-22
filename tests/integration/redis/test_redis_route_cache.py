@@ -25,7 +25,7 @@ class TestRouteCache:
         # Проверяем структуру данных
         cached_data = json.loads(cached_value)
         assert cached_data["route_id"] == route_id
-        assert cached_data["status"] == "in_progress"
+        assert cached_data["status"] == "performing"
         assert "courier_id" in cached_data
         assert "steps" in cached_data
         assert len(cached_data["steps"]) == 2

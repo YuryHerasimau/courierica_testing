@@ -2,10 +2,11 @@ import time
 import socket
 import subprocess
 import pytest
+import redis
 
-from .fixtures.redis_fixtures import *
-from .fixtures.clickhouse_fixtures import *
-from .fixtures.kafka_fixtures import *
+# from .fixtures.redis_fixtures import *
+# from .fixtures.clickhouse_fixtures import *
+# from .fixtures.kafka_fixtures import *
 from settings import settings
 
 
@@ -50,3 +51,28 @@ def ssh_tunnel():
 
     yield
     proc.terminate()
+
+@pytest.fixture(scope="session")
+def redis_client(ssh_tunnel):
+    """Возвращает Redis client для тестов"""
+    host = settings.REDIS_HOST
+    port = settings.REDIS_PORT
+    password = settings.REDIS_PASSWORD
+
+    client = redis.Redis(
+        host=host,
+        port=port,
+        password=password,
+        decode_responses=True,
+        socket_connect_timeout=3,
+        socket_timeout=3
+    )
+
+    try:
+        print(f"🔑 Подключаемся к Redis {host}:{port}")
+        client.ping()
+    except redis.exceptions.ConnectionError:
+        pytest.skip(f"Нет подключения к Redis {host}:{port}")
+    except redis.exceptions.AuthenticationError:
+        pytest.skip(f"Неверный пароль для Redis {host}:{port}")
+    return client

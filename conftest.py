@@ -1,7 +1,9 @@
-import httpx
-import pytest
 import os
 import time
+
+import httpx
+import pytest
+
 from services.auth_service import AuthService, Role
 from settings import settings
 
