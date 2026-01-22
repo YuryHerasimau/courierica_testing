@@ -1,0 +1,101 @@
+{
+    "id": "8ec1a107-a995-4e37-9346-9efdcb8a96db",
+    "number": "178824",
+    "company_id": "ac6d1196-3488-49b0-b670-8361bca1d8d6",
+    "company": {
+        "id": "ac6d1196-3488-49b0-b670-8361bca1d8d6",
+        "name": "BSL",
+        "integration_source": "saas"
+    },
+    "pickup_point": {
+        "id": "9f8896d7-3f85-4d8c-9d6e-e0b9c672cf9a",
+        "name": "ПВ в Минске",
+        "address": "Беларусь, г Минск, ул Куйбышева, д 35",
+        "hide_recipient_address": true,
+        "point": {
+            "latitude": 53.914103,
+            "longitude": 27.568137
+        },
+        "enabled": true
+    },
+    "courier": null,
+    "external_id": null,
+    "external_number": "178824",
+    "recipient_name": "АО «Кабанова, Егоров и Колесников»",
+    "recipient_phone": "77197671495",
+    "recipient_phone_extension": null,
+    "recipient_address": "Беларусь, г Минск, ул Брестская, д 68 к 1",
+    "recipient_address_comment": null,
+    "recipient_point": {
+        "latitude": 53.85426,
+        "longitude": 27.51933
+    },
+    "recipient_comment": null,
+    "payment_method": null,
+    "cost": 0,
+    "to_pay": 0,
+    "to_pay_card": 0,
+    "to_pay_cash": 0,
+    "change": 0,
+    "paid": true,
+    "ship_cost": 0,
+    "status": "new",
+    "ready_to_ship": true,
+    "is_on_way": false,
+    "specification": null,
+    "events": [
+        {
+            "id": "2773b171-7f4e-4c94-b5a0-aa9d3d0a1380",
+            "type": "delivery_operation",
+            "name": "ready_to_ship",
+            "author": {
+                "id": "257f7534-21e3-489f-af12-a92c939f13db",
+                "external_id": null,
+                "name": "Терминал",
+                "last_name": null
+            },
+            "point": null,
+            "comment": null,
+            "created_at": "2026-01-22T12:02:19.434474Z"
+        },
+        {
+            "id": "6f94ed26-450c-4ec9-870b-4035819a21e6",
+            "type": "delivery_status",
+            "name": "new",
+            "author": {
+                "id": "f0460385-4715-4d52-9489-17ec0d038686",
+                "external_id": null,
+                "name": "Юрась",
+                "last_name": "Юрась"
+            },
+            "point": null,
+            "comment": null,
+            "created_at": "2026-01-22T12:02:19.432034Z"
+        }
+    ],
+    "tpl_lock": false,
+    "time_from": "2026-01-22T07:00:00Z",
+    "time_till": "2026-01-22T20:59:00Z",
+    "timezone": null,
+    "created_at": "2026-01-22T12:02:19.42528Z",
+    "updated_at": null,
+    "decision_3pl": null,
+    "time_deadline_3pl": null,
+    "time_deadline_auto_assign": null,
+    "autoassign_deadline_processed": false,
+    "cooking_started_at": null,
+    "when_ready_to": null,
+    "assembled_at": null,
+    "delivered_at": null,
+    "cancelled_at": null,
+    "will_assigned_to_tpl": null,
+    "time_to_assigns": {},
+    "last_minute": {},
+    "back_link": null,
+    "currency": "₽",
+    "route_step_points_fact": [],
+    "route_step_points_plan": [],
+    "delivered_partially": false,
+    "route": null,
+    "hide_recipient_address": false
+}
