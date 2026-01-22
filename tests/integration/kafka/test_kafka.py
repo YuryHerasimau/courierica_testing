@@ -1,9 +1,11 @@
-from kafka import KafkaConsumer
-import pytest
-import allure
 import json
 import time
 
+import pytest
+import allure
+
+from kafka import KafkaConsumer
+from kafka.admin import KafkaAdminClient
 from kafka.errors import KafkaError
 
 
@@ -89,7 +91,7 @@ class TestKafkaEvents:
                 except (json.JSONDecodeError, UnicodeDecodeError):
                     continue
                         
-            print(f"📊 Найдено сообщений: {len(messages)}")
+            print(f"Найдено сообщений: {len(messages)}")
             assert messages, "Сообщений в топике events нет"
                 
         except KafkaError as e:
@@ -201,10 +203,8 @@ class TestKafkaEvents:
         except KafkaError as e:
             pytest.fail(f"Ошибка в цикле отправки-чтения: {e}")
 
+    @allure.title("Проверка списка consumer groups в Kafka")
     def test_consumer_groups_monitoring(self, kafka_config):
-        """Проверяет список consumer groups в Kafka"""
-        from kafka.admin import KafkaAdminClient
-        
         admin_client = KafkaAdminClient(**kafka_config)
         
         try:
